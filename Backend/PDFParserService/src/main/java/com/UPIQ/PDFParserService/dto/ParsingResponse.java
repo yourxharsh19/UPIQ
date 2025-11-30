@@ -1,0 +1,22 @@
+package com.UPIQ.PDFParserService.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ParsingResponse {
+    private int totalTransactions;
+    private int successfulParses;
+    private int failedParses;
+    private List<TransactionRequest> transactions;
+    private List<String> errors;
+    private String message;
+}
+
