@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${user.auth.service.url}")
+    @Value("${USER_AUTH_SERVICE_URL}")  // ✅ Use environment variable from Docker Compose
     private String userAuthServiceUrl;
 
     private final WebClient webClient;
@@ -48,7 +48,6 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return (exchange, chain) -> {
 
             ServerHttpRequest request = exchange.getRequest();
-
             log.info("Incoming request: {} {}", request.getMethod(), request.getURI().getPath());
 
             if (isPublicEndpoint(request.getURI().getPath())) {
@@ -56,14 +55,9 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                 return chain.filter(exchange);
             }
 
-            if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                return onError(exchange, "Missing authorization header", HttpStatus.UNAUTHORIZED);
-            }
-
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return onError(exchange, "Invalid authorization header", HttpStatus.UNAUTHORIZED);
+                return onError(exchange, "Invalid or missing token", HttpStatus.UNAUTHORIZED);
             }
 
             String token = authHeader.substring(7);
@@ -84,7 +78,9 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                 if (userIdFromToken != null && !userIdFromToken.isEmpty()) {
                     return processWithUserId(exchange, email, userIdFromToken, chain);
                 }
-            return fetchUserIdByEmail(email)
+
+                // Fetch userId dynamically from User Auth Service
+                return fetchUserIdByEmail(email)
                         .flatMap(userId -> processWithUserId(exchange, email, userId, chain))
                         .onErrorResume(e -> {
                             log.warn("Error fetching userId for {}: {}", email, e.getMessage());
@@ -100,17 +96,17 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
     private Mono<String> fetchUserIdByEmail(String email) {
         return webClient.get()
-                .uri(userAuthServiceUrl + "/api/users/email/" + email)
+                .uri(userAuthServiceUrl + "/api/v1/users/email/" + email)  // ✅ Ensure v1
                 .retrieve()
                 .bodyToMono(JsonNode.class)
                 .map(json -> json.get("userId").asText());
     }
 
     private boolean isPublicEndpoint(String path) {
-        return path.startsWith("/auth/login")
-                || path.startsWith("/auth/register")
+        return path.startsWith("/api/v1/auth/login")
+                || path.startsWith("/api/v1/auth/register")
                 || path.startsWith("/actuator")
-                || path.startsWith("/api/public");
+                || path.startsWith("/api/v1/public");
     }
 
     private Mono<Void> processWithUserId(ServerWebExchange exchange, String email,
@@ -122,7 +118,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             requestBuilder.header("X-User-Email", email);
 
         if (userId != null)
-            requestBuilder.header("X-User-Id", userId);
+            requestBuilder.header("X-User-Id", userId);  // ✅ Required for TransactionController
 
         return chain.filter(exchange.mutate().request(requestBuilder.build()).build());
     }

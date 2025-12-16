@@ -111,12 +111,35 @@ services:
     networks:
       - upiq-network
 
+#  # ===================== API GATEWAY =====================
+#  api-gateway:
+#    image: upiq-api-gateway:latest
+#    container_name: api-gateway
+#    environment:
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#    depends_on:
+#      - eureka-server
+#      - user-auth-service
+#      - pdf-parser-service
+#      - transaction-service
+#      - category-service
+#    ports:
+#      - "8080:8080"
+#    networks:
+#      - upiq-network
   # ===================== API GATEWAY =====================
   api-gateway:
     image: upiq-api-gateway:latest
     container_name: api-gateway
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+      # ✅ REQUIRED FOR JwtAuthenticationFilter
+      USER_AUTH_SERVICE_URL: http://user-auth-service:8081
+
+      # ✅ REQUIRED FOR JWT PARSING
+      JWT_SECRET: OvZseP71KwAAWUuC6jdiKL3WiefJmXeVTqUQL5jlG7EyjiXmhUqIK38D5/LGyIVZpCWaSZQ9W6hnvCJtQzABog==
+
     depends_on:
       - eureka-server
       - user-auth-service

@@ -50,7 +50,7 @@ public class GatewayConfig {
                         .filters(f -> f.filter(jwtAuthenticationFilter.apply(new JwtAuthenticationFilter.Config())))
                         .uri("lb://UPIQ-Transaction-Service")
                 )
-                
+
                 // Category Service Routes (with JWT filter)
                 .route("category-service", r -> r
                         .path("/api/categories/**")

@@ -14,8 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -25,7 +24,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Map<String, Object>>> registerUser(@Valid @RequestBody RegisterRequest request) {
         String result = authService.registerUser(request);
-        
+
         if (result.equals("User registered successfully!")) {
             Map<String, Object> data = new HashMap<>();
             data.put("message", result);
@@ -36,7 +35,7 @@ public class AuthController {
                     .build();
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
-        
+
         ApiResponse<Map<String, Object>> response = ApiResponse.<Map<String, Object>>builder()
                 .success(false)
                 .data(null)
@@ -49,7 +48,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Map<String, Object>>> loginUser(@Valid @RequestBody LoginRequest request) {
         String result = authService.loginUser(request);
-        
+
         // If result is a JWT token (starts with "ey"), it's a successful login
         if (result != null && result.startsWith("ey")) {
             Map<String, Object> data = new HashMap<>();
@@ -61,7 +60,7 @@ public class AuthController {
                     .build();
             return ResponseEntity.ok(response);
         }
-        
+
         ApiResponse<Map<String, Object>> response = ApiResponse.<Map<String, Object>>builder()
                 .success(false)
                 .data(null)
@@ -70,4 +69,3 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 }
-
