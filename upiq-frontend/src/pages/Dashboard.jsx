@@ -1,19 +1,34 @@
-import { useEffect, useState } from "react";
-import OverviewCards from "../components/dashboard/OverviewCards";
-import SpendChart from "../components/dashboard/SpendChart";
+import { useEffect, useState, useMemo } from "react";
 import TransactionService from "../services/transaction.service";
+import { useDateFilter } from "../context/DateFilterContext";
+import { filterByDateRange } from "../utils/transactionUtils";
+import KPIStrip from "../components/dashboard/KPIStrip";
+import InsightCards from "../components/dashboard/InsightCards";
+import CategoryBreakdown from "../components/dashboard/CategoryBreakdown";
+import IncomeExpenseComparison from "../components/dashboard/IncomeExpenseComparison";
+import RecentActivity from "../components/dashboard/RecentActivity";
+import BudgetProgress from "../components/dashboard/BudgetProgress";
+import DateRangeFilter from "../components/dashboard/DateRangeFilter";
+import EmptyState from "../components/ui/EmptyState";
+import SkeletonLoader from "../components/ui/SkeletonLoader";
 
 const Dashboard = () => {
-    const [transactions, setTransactions] = useState([]);
+    const [allTransactions, setAllTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { startDate, endDate } = useDateFilter();
+
+    // Filter transactions by date range
+    const transactions = useMemo(() => {
+        return filterByDateRange(allTransactions, startDate, endDate);
+    }, [allTransactions, startDate, endDate]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await TransactionService.getAll();
                 if (response.success) {
-                    setTransactions(response.data);
+                    setAllTransactions(response.data);
                 }
             } catch (err) {
                 console.error("Failed to fetch transactions", err);
@@ -28,43 +43,79 @@ const Dashboard = () => {
 
     if (loading) {
         return (
-            <div className="flex h-full items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <div className="space-y-8">
+                <div className="mb-8">
+                    <div className="h-8 bg-gray-200 rounded w-64 mb-2 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
+                </div>
+                <SkeletonLoader type="kpi" count={4} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <SkeletonLoader type="card" count={2} />
+                </div>
+                <SkeletonLoader type="card" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex h-full items-center justify-center min-h-[600px]">
+                <div className="text-center">
+                    <p className="text-red-600 font-medium mb-2">{error}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Show empty state if no transactions
+    if (allTransactions.length === 0 && !loading) {
+        return (
+            <div className="space-y-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Financial Dashboard</h1>
+                    <p className="text-gray-600">Comprehensive overview of your income, expenses, and financial insights</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+                    <EmptyState type="dashboard" />
+                </div>
             </div>
         );
     }
 
     return (
-        <div>
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-500">Welcome back, here's your financial overview.</p>
-            </div>
-
-            <OverviewCards transactions={transactions} />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-xl border border-gray-100 h-80">
-                    <h3 className="text-gray-500 text-sm font-medium mb-4">Recent Transactions</h3>
-                    <div className="space-y-4">
-                        {transactions.slice(0, 5).map((t) => (
-                            <div key={t.id} className="flex justify-between items-center border-b border-gray-50 pb-2 last:border-0">
-                                <div>
-                                    <p className="font-medium text-gray-900">{t.description || "Transaction"}</p>
-                                    <p className="text-xs text-gray-400">{new Date(t.date).toLocaleDateString()}</p>
-                                </div>
-                                <span className={`font-semibold ${t.type?.toLowerCase() === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                                    {t.type?.toLowerCase() === 'income' ? '+' : '-'}₹{t.amount}
-                                </span>
-                            </div>
-                        ))}
-                        {transactions.length === 0 && (
-                            <p className="text-center text-gray-400 mt-10">No recent transactions</p>
-                        )}
-                    </div>
+        <div className="space-y-8">
+            {/* Header */}
+            <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Financial Dashboard</h1>
+                    <p className="text-gray-600">Comprehensive overview of your income, expenses, and financial insights</p>
                 </div>
-                <SpendChart transactions={transactions} />
+                <DateRangeFilter />
             </div>
+
+            {/* KPI Strip */}
+            <KPIStrip transactions={transactions} />
+
+            {/* Insight Cards */}
+            <InsightCards transactions={transactions} />
+
+            {/* Primary Analytics Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <CategoryBreakdown transactions={transactions} />
+                <IncomeExpenseComparison transactions={transactions} />
+            </div>
+
+            {/* Budget Tracking */}
+            <BudgetProgress transactions={transactions} />
+
+            {/* Recent Activity */}
+            <RecentActivity transactions={transactions} />
         </div>
     );
 };

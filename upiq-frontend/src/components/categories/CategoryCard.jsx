@@ -1,7 +1,9 @@
 import { Edit2, Trash2 } from "lucide-react";
+import { getCategoryDisplayProps } from "../../utils/categoryUtils";
 
 const CategoryCard = ({ category, transactionCount = 0, onClick, onEdit, onDelete }) => {
     const isIncome = category.type?.toLowerCase() === 'income';
+    const displayProps = getCategoryDisplayProps(category);
 
     const handleCardClick = () => {
         if (transactionCount > 0) {
@@ -22,19 +24,17 @@ const CategoryCard = ({ category, transactionCount = 0, onClick, onEdit, onDelet
     return (
         <div
             onClick={handleCardClick}
-            className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${isIncome ? 'border-green-200 bg-green-50 hover:border-green-300' : 'border-red-200 bg-red-50 hover:border-red-300'
-                } ${transactionCount > 0 ? 'cursor-pointer' : ''}`}
+            className={`p-4 rounded-lg border-2 transition-all hover:shadow-lg hover:-translate-y-1 ${displayProps.colorClasses.border} ${displayProps.colorClasses.bg} hover:border-opacity-80 ${transactionCount > 0 ? 'cursor-pointer' : ''}`}
         >
             <div className="flex justify-between items-start">
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-2xl">{isIncome ? '💰' : '💸'}</span>
+                        <span className="text-2xl">{displayProps.icon}</span>
                         <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
                     </div>
 
                     <div className="flex items-center gap-2 mb-2">
-                        <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${isIncome ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                        <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${displayProps.colorClasses.bg} ${displayProps.colorClasses.text}`}>
                             {category.type?.toUpperCase()}
                         </span>
 

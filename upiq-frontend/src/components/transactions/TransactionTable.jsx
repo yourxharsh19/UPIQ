@@ -1,11 +1,13 @@
 import { Edit2, Trash2 } from "lucide-react";
 import Button from "../ui/Button";
+import { getCategoryDisplayProps } from "../../utils/categoryUtils";
+import EmptyState from "../ui/EmptyState";
 
 const TransactionTable = ({ transactions, onEdit, onDelete }) => {
     if (!transactions || transactions.length === 0) {
         return (
-            <div className="text-center py-10 text-gray-500 bg-white rounded-lg border border-gray-200">
-                No transactions found.
+            <div className="bg-white rounded-lg border border-gray-200">
+                <EmptyState type="transactions" />
             </div>
         );
     }
@@ -25,7 +27,7 @@ const TransactionTable = ({ transactions, onEdit, onDelete }) => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                     {transactions.map((t) => (
-                        <tr key={t.id} className="hover:bg-gray-50">
+                        <tr key={t.id} className="hover:bg-gray-50 transition-colors duration-150">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {new Date(t.date).toLocaleDateString()}
                             </td>
@@ -33,9 +35,15 @@ const TransactionTable = ({ transactions, onEdit, onDelete }) => {
                                 {t.description}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    {t.category || "Uncategorized"}
-                                </span>
+                                {(() => {
+                                    const categoryDisplay = getCategoryDisplayProps({ name: t.category });
+                                    return (
+                                        <span className={`px-2 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full ${categoryDisplay.colorClasses.bg} ${categoryDisplay.colorClasses.text}`}>
+                                            <span>{categoryDisplay.icon}</span>
+                                            {t.category || "Uncategorized"}
+                                        </span>
+                                    );
+                                })()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${t.type?.toLowerCase() === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

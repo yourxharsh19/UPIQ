@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { loginUser } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUserFromToken } = useAuth();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,8 +25,9 @@ const Login = () => {
       const token = res.data.data.token;
 
       if (token) {
-        localStorage.setItem("token", token);
-        // Assuming we want to go to dashboard or home after login
+        // Update AuthContext state before navigation
+        setUserFromToken(token);
+        // Navigate to dashboard after updating auth state
         navigate("/dashboard");
       } else {
         setError("Login failed: No token received");

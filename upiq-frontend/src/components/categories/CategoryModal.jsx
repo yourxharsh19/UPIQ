@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 import Button from "../ui/Button";
+import { useBudget } from "../../context/BudgetContext";
+import { CATEGORY_COLORS, CATEGORY_ICONS, getCategoryColor, getCategoryIcon } from "../../utils/categoryUtils";
 
 const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
+    const { getBudget, setBudget, deleteBudget } = useBudget();
     const [formData, setFormData] = useState({
         name: "",
         type: "expense",
-        description: ""
+        description: "",
+        color: "",
+        icon: ""
     });
+    const [budgetAmount, setBudgetAmount] = useState("");
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -14,16 +20,25 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
             setFormData({
                 name: category.name || "",
                 type: category.type || "expense",
-                description: category.description || ""
+                description: category.description || "",
+                color: category.color || getCategoryColor(category.name).value,
+                icon: category.icon || getCategoryIcon(category.name)
             });
+            const existingBudget = getBudget(category.name);
+            setBudgetAmount(existingBudget ? existingBudget.toString() : "");
         } else {
+            const defaultColor = CATEGORY_COLORS[0].value;
+            const defaultIcon = CATEGORY_ICONS[0];
             setFormData({
                 name: "",
                 type: "expense",
-                description: ""
+                description: "",
+                color: defaultColor,
+                icon: defaultIcon
             });
+            setBudgetAmount("");
         }
-    }, [category, isOpen]);
+    }, [category, isOpen, getBudget]);
 
     if (!isOpen) return null;
 
@@ -32,6 +47,16 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
         setSaving(true);
         try {
             await onSave(category?.id, formData);
+            // Save budget if provided
+            if (formData.name && budgetAmount && parseFloat(budgetAmount) > 0) {
+                setBudget(formData.name, parseFloat(budgetAmount));
+            } else if (formData.name && (!budgetAmount || parseFloat(budgetAmount) === 0)) {
+                // Remove budget if cleared
+                const existingBudget = getBudget(formData.name);
+                if (existingBudget) {
+                    deleteBudget(formData.name);
+                }
+            }
             onClose();
         } catch (error) {
             console.error("Failed to save category", error);
@@ -105,6 +130,75 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
                             rows="3"
                         />
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Category Color
+                        </label>
+                        <div className="grid grid-cols-5 gap-2">
+                            {CATEGORY_COLORS.map((color) => (
+                                <button
+                                    key={color.value}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, color: color.value })}
+                                    className={`w-full h-10 rounded-lg border-2 transition-all ${
+                                        formData.color === color.value
+                                            ? 'border-gray-900 ring-2 ring-offset-2 ring-primary-500'
+                                            : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                    style={{ backgroundColor: color.value }}
+                                    title={color.name}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Category Icon
+                        </label>
+                        <div className="grid grid-cols-10 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded-lg">
+                            {CATEGORY_ICONS.map((icon) => (
+                                <button
+                                    key={icon}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, icon })}
+                                    className={`w-10 h-10 rounded-lg border-2 text-xl flex items-center justify-center transition-all ${
+                                        formData.icon === icon
+                                            ? 'border-primary-600 bg-primary-50 ring-2 ring-primary-500'
+                                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    {icon}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="mt-2 flex items-center gap-2">
+                            <span className="text-2xl">{formData.icon}</span>
+                            <span className="text-sm text-gray-600">Selected icon preview</span>
+                        </div>
+                    </div>
+
+                    {formData.type === "expense" && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Monthly Budget (Optional)
+                            </label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                                <input
+                                    type="number"
+                                    value={budgetAmount}
+                                    onChange={(e) => setBudgetAmount(e.target.value)}
+                                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">Set a monthly budget to track spending for this category</p>
+                        </div>
+                    )}
 
                     <div className="flex justify-end space-x-3 pt-4">
                         <button

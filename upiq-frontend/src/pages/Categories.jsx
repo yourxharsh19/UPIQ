@@ -4,6 +4,7 @@ import TransactionService from "../services/transaction.service";
 import CategoryCard from "../components/categories/CategoryCard";
 import CategoryModal from "../components/categories/CategoryModal";
 import CategoryTransactionsModal from "../components/categories/CategoryTransactionsModal";
+import EmptyState from "../components/ui/EmptyState";
 import { Plus } from "lucide-react";
 
 const Categories = () => {
@@ -182,13 +183,14 @@ const Categories = () => {
             {loading ? (
                 <div className="text-center py-10">Loading categories...</div>
             ) : filteredCategories.length === 0 ? (
-                <div className="text-center py-10 bg-white rounded-lg border border-gray-200">
-                    <p className="text-gray-500 mb-4">
-                        {filter === "ALL" ? "No categories yet. Create your first category!" : `No ${filter} categories found.`}
-                    </p>
-                    <button onClick={handleAdd} className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
-                        Add Category
-                    </button>
+                <div className="bg-white rounded-lg border border-gray-200">
+                    <EmptyState 
+                        type="categories"
+                        title={filter === "ALL" ? "No categories yet" : `No ${filter} categories found`}
+                        description={filter === "ALL" ? "Create your first category to organize your income and expenses" : `Try a different filter or create a new ${filter} category`}
+                        actionLabel="Create Category"
+                        onAction={handleAdd}
+                    />
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

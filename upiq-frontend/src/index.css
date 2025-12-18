@@ -30,3 +30,58 @@ body {
     /* Using standard Utility classes here */
     @apply font-sans text-secondary-900 antialiased bg-gray-50;
 }
+
+/* Smooth transitions for interactive elements */
+* {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Enhanced hover states */
+button, a {
+    @apply transition-all duration-200;
+}
+
+button:hover, a:hover {
+    transform: translateY(-1px);
+}
+
+button:active, a:active {
+    transform: translateY(0);
+}
+
+/* Card hover effects */
+.card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+}
+
+/* Skeleton animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth fade-in animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}

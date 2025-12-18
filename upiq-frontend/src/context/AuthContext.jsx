@@ -51,8 +51,15 @@ export const AuthProvider = ({ children }) => {
         window.location.href = "/login";
     };
 
+    const setUserFromToken = (token) => {
+        if (token) {
+            localStorage.setItem("token", token);
+            setUser({ token });
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, loading, setUserFromToken }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,17 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import TransactionService from "../services/transaction.service";
+import { useDateFilter } from "../context/DateFilterContext";
+import { filterByDateRange } from "../utils/transactionUtils";
 import TransactionTable from "../components/transactions/TransactionTable";
 import EditTransactionModal from "../components/transactions/EditTransactionModal";
+import DateRangeFilter from "../components/dashboard/DateRangeFilter";
 import { Search } from "lucide-react";
 
 const Transactions = () => {
-    const [transactions, setTransactions] = useState([]);
+    const [allTransactions, setAllTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { startDate, endDate } = useDateFilter();
     const [filters, setFilters] = useState({
         search: "",
         type: "ALL",
         category: ""
     });
+
+    // Filter transactions by date range
+    const dateFilteredTransactions = useMemo(() => {
+        return filterByDateRange(allTransactions, startDate, endDate);
+    }, [allTransactions, startDate, endDate]);
 
     // Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -22,7 +31,7 @@ const Transactions = () => {
         try {
             const response = await TransactionService.getAll();
             if (response.success) {
-                setTransactions(response.data);
+                setAllTransactions(response.data);
             }
         } catch (error) {
             console.error("Failed to fetch transactions", error);
@@ -56,7 +65,7 @@ const Transactions = () => {
             try {
                 await TransactionService.delete(id);
                 // Optimistic update
-                setTransactions(transactions.filter(t => t.id !== id));
+                setAllTransactions(allTransactions.filter(t => t.id !== id));
             } catch (error) {
                 console.error("Delete failed", error);
                 alert("Failed to delete transaction");
@@ -69,7 +78,7 @@ const Transactions = () => {
             if (window.confirm("🔴 FINAL WARNING: This will permanently delete ALL your transaction data. Confirm?")) {
                 try {
                     await TransactionService.deleteAll();
-                    setTransactions([]);
+                    setAllTransactions([]);
                     alert("✅ All transactions deleted successfully.");
                 } catch (error) {
                     console.error("Delete All failed", error);
@@ -79,15 +88,17 @@ const Transactions = () => {
         }
     };
 
-    // Filter Logic
-    const filteredTransactions = transactions.filter(t => {
-        const matchesSearch = t.description.toLowerCase().includes(filters.search.toLowerCase()) ||
-            (t.category && t.category.toLowerCase().includes(filters.search.toLowerCase()));
+    // Filter Logic (applied to date-filtered transactions)
+    const filteredTransactions = useMemo(() => {
+        return dateFilteredTransactions.filter(t => {
+            const matchesSearch = t.description.toLowerCase().includes(filters.search.toLowerCase()) ||
+                (t.category && t.category.toLowerCase().includes(filters.search.toLowerCase()));
 
-        const matchesType = filters.type === "ALL" || t.type?.toUpperCase() === filters.type;
+            const matchesType = filters.type === "ALL" || t.type?.toUpperCase() === filters.type;
 
-        return matchesSearch && matchesType;
-    });
+            return matchesSearch && matchesType;
+        });
+    }, [dateFilteredTransactions, filters.search, filters.type]);
 
     return (
         <div className="space-y-6">
@@ -96,12 +107,15 @@ const Transactions = () => {
                     <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
                     <p className="text-gray-500">Manage and categorize your expenses.</p>
                 </div>
-                <button
-                    onClick={handleDeleteAll}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium shadow-md hover:shadow-lg"
-                >
-                    🗑️ Delete All Transactions
-                </button>
+                <div className="flex items-center gap-3">
+                    <DateRangeFilter />
+                    <button
+                        onClick={handleDeleteAll}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium shadow-md hover:shadow-lg"
+                    >
+                        🗑️ Delete All Transactions
+                    </button>
+                </div>
             </div>
 
             {/* Filters */}
