@@ -1,27 +1,28 @@
-#Global
+# Global Docker Compose for UPIQ
 version: "3.9"
 
 services:
-  # ================= POSTGRES DATABASES =================
+  # ===================== EUREKA SERVER =====================
+  eureka-server:
+    image: yourxharsh19/upiq-eureka-server:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - upiq-network
+
+  # ===================== POSTGRES DATABASES =====================
   user-auth-db:
     image: yourxharsh19/upiq-user-auth-db:16
     container_name: user-auth-db
     environment:
-      POSTGRES_DB: UserAuthdb
+      POSTGRES_DB: userauthdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
       - "5434:5432"
-
-  category-db:
-    image: yourxharsh19/upiq-category-db:16
-    container_name: category-db
-    environment:
-      POSTGRES_DB: Categorydb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5436:5432"
+    networks:
+      - upiq-network
 
   transaction-db:
     image: yourxharsh19/upiq-transaction-db:16
@@ -32,14 +33,22 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5435:5432"
+    networks:
+      - upiq-network
 
-  # ================= SERVICES =================
-  eureka-server:
-    image: yourxharsh19/upiq-eureka-server:latest
-    container_name: eureka-server
+  category-db:
+    image: yourxharsh19/upiq-category-db:16
+    container_name: category-db
+    environment:
+      POSTGRES_DB: Categorydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
-      - "8761:8761"
+      - "5436:5432"
+    networks:
+      - upiq-network
 
+  # ===================== MICROSERVICES =====================
   user-auth-service:
     image: yourxharsh19/upiq-user-auth-service:latest
     container_name: user-auth-service
@@ -49,24 +58,24 @@ services:
       - user-auth-db
       - eureka-server
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://user-auth-db:5432/UserAuthdb
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user-auth-db:5432/userauthdb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - upiq-network
 
-  category-service:
-    image: yourxharsh19/upiq-category-service:latest
-    container_name: category-service
+  pdf-parser-service:
+    image: yourxharsh19/upiq-pdf-parser-service:latest
+    container_name: pdf-parser-service
     ports:
-      - "8084:8084"
+      - "8082:8082"
     depends_on:
-      - category-db
       - eureka-server
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://category-db:5432/Categorydb
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: password
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - upiq-network
 
   transaction-service:
     image: yourxharsh19/upiq-transaction-service:latest
@@ -81,16 +90,24 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - upiq-network
 
-  pdf-parser-service:
-    image: yourxharsh19/upiq-pdf-parser-service:latest
-    container_name: pdf-parser-service
+  category-service:
+    image: yourxharsh19/upiq-category-service:latest
+    container_name: category-service
     ports:
-      - "8082:8082"
+      - "8084:8084"
     depends_on:
+      - category-db
       - eureka-server
     environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://category-db:5432/Categorydb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - upiq-network
 
   api-gateway:
     image: yourxharsh19/upiq-api-gateway:latest
@@ -107,7 +124,11 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       JWT_SECRET: OvZseP71KwAAWUuC6jdiKL3WiefJmXeVTqUQL5jlG7EyjiXmhUqIK38D5/LGyIVZpCWaSZQ9W6hnvCJtQzABog==
       JWT_EXPIRATION: 3600000
-      USER_AUTH_SERVICE_URL: http://user-auth-service
-      PDF_PARSER_SERVICE_URL: http://pdf-parser-service
-      TRANSACTION_SERVICE_URL: http://transaction-service
-      CATEGORY_SERVICE_URL: http://category-service
+      USER_AUTH_SERVICE_URL: http://UPIQ-USER-AUTHENTICATION-SERVICE
+    networks:
+      - upiq-network
+
+# ===================== NETWORK =====================
+networks:
+  upiq-network:
+    driver: bridge

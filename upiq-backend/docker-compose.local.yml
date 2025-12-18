@@ -28,9 +28,9 @@ services:
     image: upiq-user-auth-service:latest
     container_name: user-auth-service
     environment:
-      DB_HOST: user-auth-db
-      DB_USER: postgres
-      DB_PASSWORD: password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user-auth-db:5432/userauthdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
@@ -43,6 +43,9 @@ services:
   # ===================== PDF PARSER SERVICE =====================
   pdf-parser-service:
     image: upiq-pdf-parser-service:latest
+    build:
+      context: ./PDFParserService
+      dockerfile: Dockerfile
     container_name: pdf-parser-service
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -68,11 +71,14 @@ services:
 
   transaction-service:
     image: upiq-transaction-service:latest
+    build:
+      context: ./TransactionService
+      dockerfile: Dockerfile
     container_name: transaction-service
     environment:
-      DB_HOST: transaction-db
-      DB_USER: postgres
-      DB_PASSWORD: password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://transaction-db:5432/Transactiondb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
@@ -96,12 +102,15 @@ services:
       - upiq-network
 
   category-service:
+    build:
+      context: ./CategoryService
+      dockerfile: Dockerfile
     image: upiq-category-service:latest
     container_name: category-service
     environment:
-      DB_HOST: category-db
-      DB_USER: postgres
-      DB_PASSWORD: password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://category-db:5432/Categorydb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
@@ -111,34 +120,22 @@ services:
     networks:
       - upiq-network
 
-#  # ===================== API GATEWAY =====================
-#  api-gateway:
-#    image: upiq-api-gateway:latest
-#    container_name: api-gateway
-#    environment:
-#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-#    depends_on:
-#      - eureka-server
-#      - user-auth-service
-#      - pdf-parser-service
-#      - transaction-service
-#      - category-service
-#    ports:
-#      - "8080:8080"
-#    networks:
-#      - upiq-network
   # ===================== API GATEWAY =====================
   api-gateway:
     image: upiq-api-gateway:latest
+    build:
+      context: ./APIGateway
+      dockerfile: Dockerfile
     container_name: api-gateway
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
 
       # ✅ REQUIRED FOR JwtAuthenticationFilter
-      USER_AUTH_SERVICE_URL: http://user-auth-service:8081
+      USER_AUTH_SERVICE_URL: http://UPIQ-USER-AUTHENTICATION-SERVICE
 
       # ✅ REQUIRED FOR JWT PARSING
       JWT_SECRET: OvZseP71KwAAWUuC6jdiKL3WiefJmXeVTqUQL5jlG7EyjiXmhUqIK38D5/LGyIVZpCWaSZQ9W6hnvCJtQzABog==
+      JWT_EXPIRATION: 3600000
 
     depends_on:
       - eureka-server

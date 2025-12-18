@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateTransactionRequest {
-    
+
     @NotNull(message = "Amount is required")
     private Double amount;
 
@@ -23,7 +23,8 @@ public class CreateTransactionRequest {
     private String category;
 
     private String description;
-    
-    private String paymentMethod;
-}
 
+    private String paymentMethod;
+
+    private String date; // Changed to String to handle formats manually
+}

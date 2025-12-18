@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@org.springframework.transaction.annotation.Transactional
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository repository;
@@ -28,8 +29,15 @@ public class TransactionServiceImpl implements TransactionService {
                 .type(request.getType())
                 .paymentMethod(request.getPaymentMethod())
                 .userId(userId)
-                .date(LocalDateTime.now())
                 .build();
+
+        if (request.getDate() != null && !request.getDate().isEmpty()) {
+            // Remove 'Z' if present to parse as Local
+            String dateStr = request.getDate().replace("Z", "");
+            transaction.setDate(LocalDateTime.parse(dateStr));
+        } else {
+            transaction.setDate(LocalDateTime.now());
+        }
         transaction = repository.save(transaction);
         return mapToResponse(transaction);
     }
@@ -65,6 +73,39 @@ public class TransactionServiceImpl implements TransactionService {
         return mapToResponse(transaction);
     }
 
+    @Override
+    public TransactionResponse updateTransaction(Long id, CreateTransactionRequest request, Long userId) {
+        Transaction transaction = repository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
+
+        // Security check: Ensure user owns transaction or is admin (assuming user check
+        // is enough for now)
+        if (!transaction.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized update attempt");
+        }
+
+        transaction.setAmount(request.getAmount());
+        transaction.setCategory(request.getCategory());
+        transaction.setDescription(request.getDescription());
+        transaction.setType(request.getType());
+        transaction.setPaymentMethod(request.getPaymentMethod());
+
+        if (request.getDate() != null && !request.getDate().isEmpty()) {
+            String dateStr = request.getDate().replace("Z", "");
+            transaction.setDate(LocalDateTime.parse(dateStr));
+        }
+
+        Transaction updated = repository.save(transaction);
+        return mapToResponse(updated);
+    }
+
+    // ... end of updateTransaction method ...
+
+    @Override
+    public void deleteAllTransactions(Long userId) {
+        repository.deleteByUserId(userId);
+    }
+
     private TransactionResponse mapToResponse(Transaction transaction) {
         return TransactionResponse.builder()
                 .id(transaction.getId())
@@ -78,4 +119,3 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
     }
 }
-

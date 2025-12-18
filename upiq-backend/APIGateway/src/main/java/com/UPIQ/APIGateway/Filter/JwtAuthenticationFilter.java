@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${USER_AUTH_SERVICE_URL}")  // ✅ Use environment variable from Docker Compose
+    @Value("${USER_AUTH_SERVICE_URL}") // ✅ Use environment variable from Docker Compose
     private String userAuthServiceUrl;
 
     private final WebClient webClient;
@@ -80,7 +80,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                 }
 
                 // Fetch userId dynamically from User Auth Service
-                return fetchUserIdByEmail(email)
+                return fetchUserIdByEmail(email, token)
                         .flatMap(userId -> processWithUserId(exchange, email, userId, chain))
                         .onErrorResume(e -> {
                             log.warn("Error fetching userId for {}: {}", email, e.getMessage());
@@ -94,12 +94,18 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         };
     }
 
-    private Mono<String> fetchUserIdByEmail(String email) {
+    private Mono<String> fetchUserIdByEmail(String email, String token) {
         return webClient.get()
-                .uri(userAuthServiceUrl + "/api/v1/users/email/" + email)  // ✅ Ensure v1
+                .uri(userAuthServiceUrl + "/api/v1/users/email/" + email) // ✅ Ensure v1
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .retrieve()
                 .bodyToMono(JsonNode.class)
-                .map(json -> json.get("userId").asText());
+                .map(json -> {
+                    if (json.has("data") && json.get("data").has("id")) {
+                        return json.get("data").get("id").asText();
+                    }
+                    return null;
+                });
     }
 
     private boolean isPublicEndpoint(String path) {
@@ -110,7 +116,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     }
 
     private Mono<Void> processWithUserId(ServerWebExchange exchange, String email,
-                                         String userId, GatewayFilterChain chain) {
+            String userId, GatewayFilterChain chain) {
 
         ServerHttpRequest.Builder requestBuilder = exchange.getRequest().mutate();
 
@@ -118,7 +124,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             requestBuilder.header("X-User-Email", email);
 
         if (userId != null)
-            requestBuilder.header("X-User-Id", userId);  // ✅ Required for TransactionController
+            requestBuilder.header("X-User-Id", userId); // ✅ Required for TransactionController
 
         return chain.filter(exchange.mutate().request(requestBuilder.build()).build());
     }
@@ -133,5 +139,6 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return response.writeWith(Mono.just(response.bufferFactory().wrap(bytes)));
     }
 
-    public static class Config {}
+    public static class Config {
+    }
 }

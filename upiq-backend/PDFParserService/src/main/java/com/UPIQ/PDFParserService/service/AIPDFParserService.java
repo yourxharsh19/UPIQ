@@ -186,39 +186,69 @@ public class AIPDFParserService {
                 }
             }
         } else { // CREDIT
-            Pattern p = Pattern.compile(
-                    "(?:received from|credited from|credit from|received)\\s+([A-Za-z0-9\\s&.,'-]+?)(?:\\s+(?:upi|ref|id|amount|rs|inr|₹|\\d{12}|\\d{1,2}[/-]\\d{1,2})|$)",
+            // 1. Try "Paid by" pattern first (most specific for income)
+            Pattern paidByPattern = Pattern.compile(
+                    "paid\\s+by\\s+([A-Za-z0-9\\s&.,'-]+?)(?:\\s*-|\\s+(?:paid|to|upi|ref|id|amount|rs|inr|₹|\\d{12}|\\d{1,2}[/-]\\d{1,2})|$)",
                     Pattern.CASE_INSENSITIVE);
-            Matcher m = p.matcher(combined);
-            if (m.find()) {
-                name = cleanName(m.group(1), "");
+            Matcher paidByMatcher = paidByPattern.matcher(combined);
+            if (paidByMatcher.find()) {
+                name = cleanName(paidByMatcher.group(1), "");
                 if (!name.isEmpty() && !name.toLowerCase().matches(".*(?:bank|account|wallet|your).*")) {
                     return "Received from " + name;
                 }
             }
 
-            // Fallback keywords check per line
-            String[] creditKeywords = { "received from", "credited", "refund", "cashback" };
-            for (String line : block) {
-                for (String kw : creditKeywords) {
-                    if (line.toLowerCase().contains(kw)) {
-                        String clean = cleanName(line, kw);
-                        if (!clean.isEmpty())
-                            return formatDesc(kw, clean);
-                    }
+            // 2. Try "Received from" / "Credited from" patterns
+            Pattern receivedPattern = Pattern.compile(
+                    "(?:received from|credited from|credit from)\\s+([A-Za-z0-9\\s&.,'-]+?)(?:\\s*-|\\s+(?:upi|ref|id|amount|rs|inr|₹|\\d{12}|\\d{1,2}[/-]\\d{1,2})|$)",
+                    Pattern.CASE_INSENSITIVE);
+            Matcher receivedMatcher = receivedPattern.matcher(combined);
+            if (receivedMatcher.find()) {
+                name = cleanName(receivedMatcher.group(1), "");
+                if (!name.isEmpty() && !name.toLowerCase().matches(".*(?:bank|account|wallet|your).*")) {
+                    return "Received from " + name;
                 }
             }
-            // Support "Paid to Bank..." which was classified as CREDIT
-            // We want "Paid to Bank" description to be clean
+
+            // 3. Fallback: Check each line for keywords
+            for (String line : block) {
+                String lineLower = line.toLowerCase();
+
+                // Check for "paid by"
+                if (lineLower.contains("paid by")) {
+                    String clean = cleanName(line, "paid by");
+                    if (!clean.isEmpty() && !clean.toLowerCase().matches(".*(?:bank|account|wallet).*"))
+                        return "Received from " + clean;
+                }
+
+                // Check for "received from"
+                if (lineLower.contains("received from")) {
+                    String clean = cleanName(line, "received from");
+                    if (!clean.isEmpty() && !clean.toLowerCase().matches(".*(?:bank|account|wallet).*"))
+                        return "Received from " + clean;
+                }
+
+                // Check for refund/cashback
+                if (lineLower.contains("refund") || lineLower.contains("cashback")) {
+                    String clean = cleanName(line, lineLower.contains("refund") ? "refund" : "cashback");
+                    if (!clean.isEmpty())
+                        return "Received from " + clean;
+                }
+            }
+
+            // 4. Last Resort: "Paid to {My Bank}" -> "Deposit to {My Bank}"
             if (lower.startsWith("paid to") || lower.startsWith("payment to")) {
-                String[] bankKeywords = { "paid to", "payment to" };
                 for (String line : block) {
-                    for (String kw : bankKeywords) {
-                        if (line.toLowerCase().contains(kw)) {
-                            String clean = cleanName(line, kw);
-                            if (!clean.isEmpty())
-                                return formatDesc(kw, clean);
-                        }
+                    String lineLower = line.toLowerCase();
+                    if (lineLower.contains("paid to")) {
+                        String clean = cleanName(line, "paid to");
+                        if (!clean.isEmpty())
+                            return "Deposit to " + clean;
+                    }
+                    if (lineLower.contains("payment to")) {
+                        String clean = cleanName(line, "payment to");
+                        if (!clean.isEmpty())
+                            return "Deposit to " + clean;
                     }
                 }
             }

@@ -15,5 +15,9 @@ public interface TransactionService {
     void deleteTransaction(Long id);
 
     TransactionResponse getById(Long id);
-}
 
+    TransactionResponse updateTransaction(Long id, com.UPIQ.TransactionService.dto.CreateTransactionRequest request,
+            Long userId);
+
+    void deleteAllTransactions(Long userId);
+}
