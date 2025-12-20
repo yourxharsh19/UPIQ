@@ -7,6 +7,9 @@ spring:
 
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 2000
+        response-timeout: 10s
       discovery:
         locator:
           enabled: true
@@ -15,25 +18,25 @@ spring:
       routes:
         # Auth Service
         - id: user-auth-service
-          uri: lb://UPIQ-USER-AUTHENTICATION-SERVICE
+          uri: lb://UPIQ-User-Authentication-Service
           predicates:
             - Path=/api/auth/**
 
         # PDF Parser Service
         - id: pdf-parser-service
-          uri: lb://UPIQ-PDFPARSER-SERVICE
+          uri: lb://UPIQ-PDFParser-Service
           predicates:
             - Path=/api/pdf/**
 
         # Transaction Service
         - id: transaction-service
-          uri: lb://UPIQ-TRANSACTION-SERVICE
+          uri: lb://UPIQ-Transaction-Service
           predicates:
-            - Path=/api/transaction/**
+            - Path=/api/transactions/**
 
         # Category Service
         - id: category-service
-          uri: lb://UPIQ-CATEGORY-SERVICE
+          uri: lb://UPIQ-Category-Service
           predicates:
             - Path=/api/categories/**
 
@@ -53,7 +56,7 @@ spring:
       allow-credentials: true
 
 jwt:
-  secret: OvZseP71KwAAWUuC6jdiKL3WiefJmXeVTqUQL5jlG7EyjiXmhUqIK38D5/LGyIVZpCWaSZQ9W6hnvCJtQzABog==
+  secret: ${JWT_SECRET}
   expiration: 3600000
 
 eureka:

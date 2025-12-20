@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Button from "../ui/Button";
 import { useBudget } from "../../context/BudgetContext";
 import { CATEGORY_COLORS, CATEGORY_ICONS, getCategoryColor, getCategoryIcon } from "../../utils/categoryUtils";
+import { X } from "lucide-react";
+import clsx from "clsx";
 
 const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
     const { getBudget, setBudget, deleteBudget } = useBudget();
@@ -17,11 +19,13 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
 
     useEffect(() => {
         if (category) {
+            // Get proper color object even for custom colors
+            const categoryColor = getCategoryColor(category.name, category.color);
             setFormData({
                 name: category.name || "",
                 type: category.type || "expense",
                 description: category.description || "",
-                color: category.color || getCategoryColor(category.name).value,
+                color: category.color || categoryColor.value,
                 icon: category.icon || getCategoryIcon(category.name)
             });
             const existingBudget = getBudget(category.name);
@@ -47,16 +51,29 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
         setSaving(true);
         try {
             await onSave(category?.id, formData);
-            // Save budget if provided
-            if (formData.name && budgetAmount && parseFloat(budgetAmount) > 0) {
-                setBudget(formData.name, parseFloat(budgetAmount));
-            } else if (formData.name && (!budgetAmount || parseFloat(budgetAmount) === 0)) {
-                // Remove budget if cleared
-                const existingBudget = getBudget(formData.name);
+
+            // Sync budget
+            const newName = formData.name;
+            const oldName = category?.name;
+
+            if (category && oldName && newName !== oldName) {
+                // Category was renamed - move the budget
+                const existingBudget = getBudget(oldName);
                 if (existingBudget) {
-                    deleteBudget(formData.name);
+                    deleteBudget(oldName);
+                    setBudget(newName, existingBudget);
                 }
             }
+
+            // Save/Update budget if provided in the input field
+            const amount = parseFloat(budgetAmount);
+            if (newName && !isNaN(amount) && amount > 0) {
+                setBudget(newName, amount);
+            } else if (newName && (isNaN(amount) || amount === 0)) {
+                // Remove budget if cleared
+                deleteBudget(newName);
+            }
+
             onClose();
         } catch (error) {
             console.error("Failed to save category", error);
@@ -67,151 +84,153 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="p-4 border-b border-gray-100">
-                    <h2 className="text-xl font-semibold text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-[var(--bg-card)] rounded-3xl shadow-premium w-full max-w-md overflow-hidden animate-zoom-in">
+                <div className="px-6 py-5 border-b border-[var(--border-base)] flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-[var(--text-main)] tracking-tight">
                         {category ? "Edit Category" : "Add New Category"}
                     </h2>
+                    <button onClick={onClose} className="p-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">
+                        <X size={20} />
+                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-4 space-y-3">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Category Name *
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                            placeholder="e.g., Food, Rent, Salary"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Type *
-                        </label>
-                        <div className="flex gap-4">
-                            <label className="flex items-center cursor-pointer">
-                                <input
-                                    type="radio"
-                                    value="expense"
-                                    checked={formData.type === "expense"}
-                                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                    className="mr-2"
-                                />
-                                <span className="text-sm">💸 Expense</span>
-                            </label>
-                            <label className="flex items-center cursor-pointer">
-                                <input
-                                    type="radio"
-                                    value="income"
-                                    checked={formData.type === "income"}
-                                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                    className="mr-2"
-                                />
-                                <span className="text-sm">💰 Income</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Description (Optional)
-                        </label>
-                        <textarea
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                            placeholder="Add a description..."
-                            rows="3"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Category Color
-                        </label>
-                        <div className="grid grid-cols-5 gap-2">
-                            {CATEGORY_COLORS.map((color) => (
-                                <button
-                                    key={color.value}
-                                    type="button"
-                                    onClick={() => setFormData({ ...formData, color: color.value })}
-                                    className={`w-full h-10 rounded-lg border-2 transition-all ${formData.color === color.value
-                                        ? 'border-gray-900 ring-2 ring-offset-2 ring-primary-500 z-10'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                        }`}
-                                    style={{ backgroundColor: color.value }}
-                                    title={color.name}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Category Icon
-                        </label>
-                        <div className="grid grid-cols-8 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded-lg">
-                            {CATEGORY_ICONS.map((icon) => (
-                                <button
-                                    key={icon}
-                                    type="button"
-                                    onClick={() => setFormData({ ...formData, icon })}
-                                    className={`w-10 h-10 rounded-lg border-2 text-xl flex items-center justify-center transition-all ${formData.icon === icon
-                                        ? 'border-primary-600 bg-primary-50 ring-2 ring-primary-500'
-                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    {icon}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="mt-2 flex items-center gap-2">
-                            <span className="text-2xl">{formData.icon}</span>
-                            <span className="text-sm text-gray-600">Selected icon preview</span>
-                        </div>
-                    </div>
-
-                    {formData.type === "expense" && (
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Monthly Budget (Optional)
+                            <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+                                Category Name
                             </label>
-                            <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
-                                <input
-                                    type="number"
-                                    value={budgetAmount}
-                                    onChange={(e) => setBudgetAmount(e.target.value)}
-                                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                    placeholder="0.00"
-                                    min="0"
-                                    step="0.01"
-                                />
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">Set a monthly budget to track spending for this category</p>
+                            <input
+                                type="text"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                className="w-full px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-base)] rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm transition-all text-[var(--text-main)]"
+                                placeholder="e.g., Food, Rent, Salary"
+                                required
+                            />
                         </div>
-                    )}
 
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <button
-                            type="button"
+                        <div>
+                            <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-3">
+                                Type
+                            </label>
+                            <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-base)] w-fit">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, type: "expense" })}
+                                    className={clsx(
+                                        "px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
+                                        formData.type === "expense" ? "bg-[var(--bg-card)] text-rose-600 shadow-sm border border-[var(--border-base)]" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                                    )}
+                                >
+                                    Expense
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, type: "income" })}
+                                    className={clsx(
+                                        "px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
+                                        formData.type === "income" ? "bg-[var(--bg-card)] text-emerald-600 shadow-sm border border-[var(--border-base)]" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                                    )}
+                                >
+                                    Income
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+                                Description
+                            </label>
+                            <textarea
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                className="w-full px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-base)] rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm transition-all text-[var(--text-main)] resize-none"
+                                placeholder="Add a description..."
+                                rows="3"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-3">
+                                Category Color
+                            </label>
+                            <div className="grid grid-cols-5 gap-3">
+                                {CATEGORY_COLORS.map((color) => (
+                                    <button
+                                        key={color.value}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, color: color.value })}
+                                        className={clsx(
+                                            "w-full h-10 rounded-xl transition-all duration-300 relative border border-black/5",
+                                            formData.color === color.value ? "ring-2 ring-primary-500 ring-offset-4 ring-offset-[var(--bg-card)] scale-90" : "hover:scale-105"
+                                        )}
+                                        style={{ backgroundColor: color.value }}
+                                        title={color.name}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-3">
+                                Category Icon
+                            </label>
+                            <div className="grid grid-cols-6 gap-3 p-3 bg-[var(--bg-surface)] rounded-2xl border border-[var(--border-base)]">
+                                {CATEGORY_ICONS.map((icon) => (
+                                    <button
+                                        key={icon}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, icon })}
+                                        className={clsx(
+                                            "w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all",
+                                            formData.icon === icon
+                                                ? "bg-[var(--bg-card)] text-[var(--text-main)] shadow-premium border border-[var(--border-base)] scale-110"
+                                                : "text-[var(--text-muted)] hover:bg-[var(--bg-card)]/50 hover:text-[var(--text-main)]"
+                                        )}
+                                    >
+                                        {icon}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {formData.type === "expense" && (
+                            <div>
+                                <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+                                    Monthly Budget
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-bold">₹</span>
+                                    <input
+                                        type="number"
+                                        value={budgetAmount}
+                                        onChange={(e) => setBudgetAmount(e.target.value)}
+                                        className="w-full pl-8 pr-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-base)] rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm transition-all text-[var(--text-main)] font-bold"
+                                        placeholder="0.00"
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        <Button
+                            variant="secondary"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                            className="flex-1"
                         >
                             Cancel
-                        </button>
+                        </Button>
                         <Button
                             type="submit"
-                            isLoading={saving}
-                            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                            loading={saving}
+                            className="flex-1"
                         >
-                            {category ? "Update" : "Create"} Category
+                            {category ? "Update" : "Create"}
                         </Button>
                     </div>
                 </form>

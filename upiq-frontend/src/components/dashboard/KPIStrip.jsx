@@ -1,12 +1,14 @@
+import { useMemo } from "react";
 import { Wallet, TrendingUp, TrendingDown, Percent } from "lucide-react";
 import { calculateBalance, calculateTotalIncome, calculateTotalExpenses, calculateSavingsRate, compareMonthOverMonth } from "../../utils/transactionUtils";
+import clsx from "clsx";
 
 const KPIStrip = ({ transactions }) => {
-  const balance = calculateBalance(transactions);
-  const income = calculateTotalIncome(transactions);
-  const expenses = calculateTotalExpenses(transactions);
-  const savingsRate = calculateSavingsRate(transactions);
-  const momComparison = compareMonthOverMonth(transactions);
+  const balance = useMemo(() => calculateBalance(transactions), [transactions]);
+  const income = useMemo(() => calculateTotalIncome(transactions), [transactions]);
+  const expenses = useMemo(() => calculateTotalExpenses(transactions), [transactions]);
+  const savingsRate = useMemo(() => calculateSavingsRate(transactions), [transactions]);
+  const momComparison = useMemo(() => compareMonthOverMonth(transactions), [transactions]);
 
   const kpis = [
     {
@@ -40,59 +42,45 @@ const KPIStrip = ({ transactions }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
       {kpis.map((kpi, index) => {
         const Icon = kpi.icon;
         const trend = kpi.trend;
-        
+
         return (
           <div
             key={index}
-            className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+            className="bg-[var(--bg-card)] rounded-2xl shadow-premium border border-[var(--border-base)] p-6 hover:shadow-premium-hover transition-all duration-300 group"
           >
-            <div className={`${kpi.bgColor} p-4 text-white`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                    <Icon size={24} className="text-white" />
-                  </div>
-                  <div>
-                    <p className="text-white/90 text-xs font-medium uppercase tracking-wide">
-                      {kpi.label}
-                    </p>
-                    <p className="text-2xl font-bold mt-1">{kpi.value}</p>
-                  </div>
-                </div>
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-base)] text-primary-600 dark:text-primary-400">
+                <Icon size={20} />
               </div>
+              {trend && (
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[var(--bg-surface)] border border-[var(--border-base)]">
+                  {trend.direction === 'down' ? (
+                    <TrendingDown size={12} className="text-emerald-500" />
+                  ) : trend.direction === 'up' ? (
+                    <TrendingUp size={12} className="text-rose-500" />
+                  ) : null}
+                  <span className={clsx(
+                    "text-[10px] font-bold uppercase tracking-wider",
+                    trend.direction === 'down' ? "text-emerald-500" : trend.direction === 'up' ? "text-rose-500" : "text-[var(--text-muted)]"
+                  )}>
+                    {trend.change ? `${trend.change.toFixed(0)}%` : "stable"}
+                  </span>
+                </div>
+              )}
             </div>
-            
-            {trend && (
-              <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
-                <div className="flex items-center gap-2">
-                  {trend.direction === 'up' && (
-                    <>
-                      <TrendingUp size={16} className="text-red-500" />
-                      <span className="text-sm font-medium text-red-600">
-                        ↑ {trend.change.toFixed(1)}% vs last month
-                      </span>
-                    </>
-                  )}
-                  {trend.direction === 'down' && (
-                    <>
-                      <TrendingDown size={16} className="text-green-500" />
-                      <span className="text-sm font-medium text-green-600">
-                        ↓ {trend.change.toFixed(1)}% vs last month
-                      </span>
-                    </>
-                  )}
-                  {trend.direction === 'neutral' && (
-                    <span className="text-sm font-medium text-gray-600">
-                      No change vs last month
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+
+            <div>
+              <p className="text-[var(--text-muted)] text-sm font-medium opacity-80">
+                {kpi.label}
+              </p>
+              <h2 className="text-3xl font-bold mt-1 text-[var(--text-main)] tracking-tight">
+                {kpi.value}
+              </h2>
+            </div>
           </div>
         );
       })}

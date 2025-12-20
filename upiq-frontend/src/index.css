@@ -1,18 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-    --font-sans: 'Inter', sans-serif;
+    --font-sans: 'Inter', 'Outfit', system-ui, sans-serif;
 
-    --color-primary-50: #f0f9ff;
-    --color-primary-100: #e0f2fe;
-    --color-primary-200: #bae6fd;
-    --color-primary-300: #7dd3fc;
-    --color-primary-400: #38bdf8;
-    --color-primary-500: #0ea5e9;
-    --color-primary-600: #0284c7;
-    --color-primary-700: #0369a1;
-    --color-primary-800: #075985;
-    --color-primary-900: #0c4a6e;
+    /* Color Palette - Refined for Premium Feel */
+    --color-primary-50: #eef2ff;
+    --color-primary-100: #e0e7ff;
+    --color-primary-200: #c7d2fe;
+    --color-primary-300: #a5b4fc;
+    --color-primary-400: #818cf8;
+    --color-primary-500: #6366f1;
+    /* Indigo - More confident */
+    --color-primary-600: #4f46e5;
+    --color-primary-700: #4338ca;
+    --color-primary-800: #3730a3;
+    --color-primary-900: #312e81;
 
     --color-secondary-50: #f8fafc;
     --color-secondary-100: #f1f5f9;
@@ -24,11 +26,39 @@
     --color-secondary-700: #334155;
     --color-secondary-800: #1e293b;
     --color-secondary-900: #0f172a;
+
+    /* Semantic Spacing & Shadows */
+    --shadow-premium: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-premium-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+:root {
+    /* Semantic Theme Tokens - Light Mode (Soft Neutral) */
+    --bg-main: #fcfcfd;
+    --bg-card: #ffffff;
+    --bg-surface: #f8fafc;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-base: #e2e8f0;
+    --primary-accent: #6366f1;
+}
+
+.dark {
+    /* Semantic Theme Tokens - Dark Mode (Deep Navy / Arc Style) */
+    --bg-main: #0b0e14;
+    --bg-card: #151921;
+    --bg-surface: #1c212b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-base: #252d3d;
+    --primary-accent: #818cf8;
 }
 
 body {
-    /* Using standard Utility classes here */
-    @apply font-sans text-secondary-900 antialiased bg-gray-50;
+    @apply font-sans antialiased;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Smooth transitions for interactive elements */
@@ -39,15 +69,18 @@ body {
 }
 
 /* Enhanced hover states */
-button, a {
+button,
+a {
     @apply transition-all duration-200;
 }
 
-button:hover, a:hover {
+button:hover,
+a:hover {
     transform: translateY(-1px);
 }
 
-button:active, a:active {
+button:active,
+a:active {
     transform: translateY(0);
 }
 
@@ -58,9 +91,12 @@ button:active, a:active {
 
 /* Skeleton animation */
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.5;
     }
@@ -76,6 +112,7 @@ button:active, a:active {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

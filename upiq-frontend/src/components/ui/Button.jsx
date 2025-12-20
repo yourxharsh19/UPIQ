@@ -12,16 +12,17 @@ const Button = ({
     type = "button"
 }) => {
     const variants = {
-        primary: "bg-primary-600 hover:bg-primary-700 text-white shadow-sm ring-1 ring-primary-600",
-        secondary: "bg-white hover:bg-gray-50 text-gray-700 shadow-sm ring-1 ring-gray-300",
-        danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm",
-        ghost: "hover:bg-gray-100 text-gray-600"
+        primary: "bg-primary-600 hover:bg-primary-700 text-white shadow-premium hover:shadow-premium-hover",
+        secondary: "bg-[var(--bg-card)] hover:bg-[var(--bg-surface)] text-[var(--text-main)] shadow-premium hover:shadow-premium-hover border border-[var(--border-base)]",
+        danger: "bg-rose-600 hover:bg-rose-700 text-white shadow-premium",
+        ghost: "hover:bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-main)]",
+        outline: "bg-transparent border border-[var(--border-base)] text-[var(--text-main)] hover:bg-[var(--bg-surface)]"
     };
 
     const sizes = {
-        sm: "px-3 py-1.5 text-sm",
-        md: "px-4 py-2 text-sm",
-        lg: "px-6 py-3 text-base"
+        sm: "px-3 py-1.5 text-xs font-bold uppercase tracking-wider",
+        md: "px-5 py-2.5 text-sm font-bold tracking-tight",
+        lg: "px-8 py-3.5 text-base font-bold tracking-tight"
     };
 
     return (
@@ -30,7 +31,7 @@ const Button = ({
             onClick={onClick}
             disabled={disabled || loading}
             className={clsx(
-                "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed",
+                "inline-flex items-center justify-center rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100",
                 variants[variant],
                 sizes[size],
                 className

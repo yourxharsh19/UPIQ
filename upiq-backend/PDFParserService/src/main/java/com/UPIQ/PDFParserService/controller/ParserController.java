@@ -26,7 +26,8 @@ public class ParserController {
          */
         @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<ApiResponse<ParsingResponse>> uploadAndParse(
-                        @RequestParam("file") MultipartFile file) {
+                        @RequestParam("file") MultipartFile file,
+                        @RequestHeader("X-User-Id") Long userId) {
                 log.info("Received file upload request: {} ({} bytes)",
                                 file.getOriginalFilename(), file.getSize());
 

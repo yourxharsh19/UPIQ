@@ -5,6 +5,7 @@ import TransactionService from "../services/transaction.service";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { useNavigate } from "react-router-dom";
+import clsx from "clsx";
 
 const UploadPDF = () => {
     const navigate = useNavigate();
@@ -185,17 +186,17 @@ const UploadPDF = () => {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Upload Statement</h1>
-                <p className="text-gray-500">Upload your bank statement PDF to automatically extract transactions.</p>
+                <h1 className="text-2xl font-bold text-[var(--text-main)]">Upload Statement</h1>
+                <p className="text-[var(--text-muted)]">Upload your bank statement PDF to automatically extract transactions.</p>
             </div>
 
             {!parsedData ? (
-                <Card className="p-10 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-primary-500 transition-colors">
-                    <div className="bg-primary-50 p-4 rounded-full mb-4">
-                        <Upload className="w-8 h-8 text-primary-600" />
+                <Card className="p-12 flex flex-col items-center justify-center border-2 border-dashed border-[var(--border-base)] hover:border-primary-500 transition-all duration-300 group bg-[var(--bg-card)]">
+                    <div className="bg-primary-500/10 p-5 rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-300 border border-primary-500/20">
+                        <Upload className="w-10 h-10 text-primary-600 dark:text-primary-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Bank Statement</h3>
-                    <p className="text-gray-500 text-sm mb-6 max-w-sm text-center">
+                    <h3 className="text-xl font-bold text-[var(--text-main)] mb-2 tracking-tight transition-colors">Upload Bank Statement</h3>
+                    <p className="text-[var(--text-muted)] text-sm mb-10 max-w-xs text-center leading-relaxed">
                         Drag and drop your PDF here, or click to browse.
                     </p>
 
@@ -207,111 +208,110 @@ const UploadPDF = () => {
                         ref={fileInputRef}
                     />
 
-                    <Button variant="secondary" onClick={handleBrowseClick}>
+                    <Button variant="outline" onClick={handleBrowseClick}>
                         Select PDF
                     </Button>
 
                     {file && (
-                        <div className="mt-6 flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
-                            <FileText className="text-gray-500" size={20} />
-                            <span className="text-sm font-medium text-gray-700">{file.name}</span>
-                            <button onClick={() => setFile(null)} className="text-gray-400 hover:text-red-500">
+                        <div className="mt-8 flex items-center gap-4 bg-[var(--bg-surface)] px-6 py-3 rounded-2xl border border-[var(--border-base)] animate-fade-in">
+                            <FileText className="text-primary-600" size={20} />
+                            <span className="text-sm font-bold text-[var(--text-main)] truncate max-w-[200px]">{file.name}</span>
+                            <button onClick={() => setFile(null)} className="text-[var(--text-muted)] hover:text-rose-500 transition-colors">
                                 <X size={18} />
                             </button>
                         </div>
                     )}
 
                     {error && (
-                        <div className="mt-4 flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-2 rounded-lg">
-                            <AlertCircle size={16} />
+                        <div className="mt-6 flex items-center gap-2 text-rose-600 text-xs font-bold uppercase tracking-wider bg-rose-500/10 px-4 py-2 rounded-xl border border-rose-500/20 animate-fade-in">
+                            <AlertCircle size={14} />
                             {error}
                         </div>
                     )}
 
-                    <div className="mt-8 w-full max-w-xs">
+                    <div className="mt-10 w-full max-w-sm">
                         <Button
                             onClick={handleUpload}
                             disabled={!file}
                             loading={loading}
                             className="w-full"
+                            size="lg"
                         >
                             {loading ? "Parsing..." : "Extract Transactions"}
                         </Button>
                     </div>
                 </Card>
             ) : (
-                <div className="space-y-6">
-                    <Card>
-                        <div className="flex justify-between items-center mb-6">
+                <div className="space-y-8 animate-fade-in">
+                    <Card className="p-8">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900">Preview Transactions</h3>
-                                <p className="text-sm text-gray-500">
-                                    Found {parsedData.totalTransactions} transactions
+                                <h3 className="text-xl font-bold text-[var(--text-main)] tracking-tight">Preview Transactions</h3>
+                                <p className="text-sm text-[var(--text-muted)] mt-1">
+                                    Found <span className="text-[var(--text-main)] font-bold">{parsedData.totalTransactions}</span> transactions.
                                     {parsedData.transactions.filter(t => t.isDuplicate).length > 0 && (
-                                        <span className="text-yellow-600 font-medium">
-                                            {" "}({parsedData.transactions.filter(t => t.isDuplicate).length} duplicates will be skipped)
+                                        <span className="text-amber-500 font-bold ml-1">
+                                            ({parsedData.transactions.filter(t => t.isDuplicate).length} duplicates will be skipped)
                                         </span>
                                     )}
-                                    . Please review before saving.
                                 </p>
                             </div>
-                            <div className="flex gap-3">
-                                <Button variant="secondary" onClick={() => setParsedData(null)}>
+                            <div className="flex gap-3 w-full md:w-auto">
+                                <Button variant="ghost" onClick={() => setParsedData(null)} size="md">
                                     Cancel
                                 </Button>
-                                <Button onClick={handleSave} loading={saving}>
+                                <Button onClick={handleSave} loading={saving} size="md">
                                     <Save className="w-4 h-4 mr-2" />
                                     Save All
                                 </Button>
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 text-center">
-                                    <tr>
-                                        <th className="px-4 py-3 rounded-tl-lg">Date</th>
-                                        <th className="px-4 py-3">Description</th>
-                                        <th className="px-4 py-3">Amount</th>
-                                        <th className="px-4 py-3">Type</th>
-                                        <th className="px-4 py-3 rounded-tr-lg">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {parsedData.transactions.map((t, i) => (
-                                        <tr key={i} className={`border-b last:border-0 text-center ${t.isDuplicate ? 'bg-yellow-50 opacity-60' : 'hover:bg-gray-50'}`}>
-                                            <td className={`px-4 py-3 text-gray-600 ${t.isDuplicate ? 'line-through' : ''}`}>
-                                                {t.date ? new Date(t.date).toLocaleDateString() : "-"}
-                                            </td>
-                                            <td className={`px-4 py-3 font-medium text-gray-900 text-left ${t.isDuplicate ? 'line-through' : ''}`}>
-                                                {t.description}
-                                            </td>
-                                            <td className={`px-4 py-3 font-bold ${t.isDuplicate ? 'line-through' : ''} ${t.type.toLowerCase() === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                                                {t.type.toLowerCase() === 'income' ? '+' : '-'}₹{t.amount}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.type.toLowerCase() === 'income'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-red-100 text-red-700'
-                                                    }`}>
-                                                    {t.type}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {t.isDuplicate ? (
-                                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
-                                                        Duplicate
-                                                    </span>
-                                                ) : (
-                                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                                        New
-                                                    </span>
-                                                )}
-                                            </td>
+                        <div className="overflow-hidden bg-[var(--bg-card)] rounded-2xl border border-[var(--border-base)]">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-center">
+                                    <thead className="bg-[var(--bg-surface)]">
+                                        <tr>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Date</th>
+                                            <th className="px-6 py-4 text-left text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Description</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Amount</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Status</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-[var(--border-base)]">
+                                        {parsedData.transactions.map((t, i) => (
+                                            <tr key={i} className={clsx(
+                                                "transition-colors",
+                                                t.isDuplicate ? 'bg-[var(--bg-surface)]/50 opacity-60' : 'hover:bg-[var(--bg-surface)]/30'
+                                            )}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-[var(--text-muted)] font-medium">
+                                                    {t.date ? new Date(t.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : "-"}
+                                                </td>
+                                                <td className="px-6 py-4 text-left font-bold text-[var(--text-main)] tracking-tight">
+                                                    {t.description}
+                                                </td>
+                                                <td className={clsx(
+                                                    "px-6 py-4 font-bold tracking-tight",
+                                                    t.type.toLowerCase() === 'income' ? 'text-emerald-500' : 'text-rose-500'
+                                                )}>
+                                                    {t.type.toLowerCase() === 'income' ? '+' : '-'}₹{t.amount?.toLocaleString('en-IN')}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {t.isDuplicate ? (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                                            Duplicate
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20">
+                                                            New
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </Card>
                 </div>

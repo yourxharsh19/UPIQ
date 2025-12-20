@@ -91,61 +91,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public void deleteCategory(Long id, Long userId) {
-        System.out.println("=== DELETE CATEGORY DEBUG ===");
-        System.out.println(
-                "Requested category id: " + id + " (type: " + (id != null ? id.getClass().getName() : "null") + ")");
-        System.out.println("Requested userId: " + userId + " (type: "
-                + (userId != null ? userId.getClass().getName() : "null") + ")");
-
-        // First check if category exists at all
-        boolean categoryExists = categoryRepository.existsById(id);
-        System.out.println("Category with id " + id + " exists in DB: " + categoryExists);
-
-        // Check if category exists but belongs to different user
-        if (categoryExists) {
-            categoryRepository.findById(id).ifPresent(cat -> {
-                System.out.println("Category found in DB:");
-                System.out.println("  - id: " + cat.getId() + " (type: " + cat.getId().getClass().getName() + ")");
-                System.out.println("  - userId: " + cat.getUserId() + " (type: "
-                        + (cat.getUserId() != null ? cat.getUserId().getClass().getName() : "null") + ")");
-                System.out.println("  - name: " + cat.getName());
-
-                // Compare userIds
-                if (cat.getUserId() != null && userId != null) {
-                    boolean equals = cat.getUserId().equals(userId);
-                    boolean longEquals = cat.getUserId().longValue() == userId.longValue();
-                    System.out.println("  - userId comparison: " + cat.getUserId() + " == " + userId + " ? " + equals);
-                    System.out.println("  - userId longValue comparison: " + cat.getUserId().longValue() + " == "
-                            + userId.longValue() + " ? " + longEquals);
-
-                    if (!equals) {
-                        System.out.println("  *** MISMATCH: Category belongs to userId " + cat.getUserId()
-                                + " but you're requesting as userId " + userId + " ***");
-                        System.out.println("  *** SOLUTION: Use the JWT token for userId " + cat.getUserId()
-                                + " to delete this category ***");
-                    }
-                } else {
-                    System.out.println("  - ERROR: One of the userIds is null!");
-                }
-            });
-        }
-
-        // Try to find the category
-        Optional<Category> categoryOpt = categoryRepository.findByIdAndUserId(id, userId);
-        System.out.println("findByIdAndUserId result: " + (categoryOpt.isPresent() ? "FOUND" : "NOT FOUND"));
-
-        if (!categoryOpt.isPresent()) {
-            // Try alternative query to see what's in the database
-            System.out.println("Trying alternative: findAll categories for userId " + userId);
-            List<Category> userCategories = categoryRepository.findByUserId(userId);
-            System.out.println("Categories for userId " + userId + ": " + userCategories.size());
-            userCategories.forEach(cat -> System.out.println("  - id: " + cat.getId() + ", name: " + cat.getName()));
-        }
-
-        Category category = categoryOpt
+        Category category = categoryRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> {
-                    // Provide more helpful error message
-                    if (categoryExists) {
+                    if (categoryRepository.existsById(id)) {
                         return new CategoryNotFoundException(
                                 "Category with id " + id + " exists but does not belong to user " + userId);
                     } else {
@@ -153,18 +101,7 @@ public class CategoryServiceImpl implements CategoryService {
                     }
                 });
 
-        // Log before deletion for debugging
-        System.out.println("Deleting category with id: " + id + " for userId: " + userId);
-        System.out.println("Category found: " + category.getName());
-
         categoryRepository.delete(category);
-        // Flush to ensure deletion is committed immediately
-        categoryRepository.flush();
-
-        // Verify deletion
-        boolean exists = categoryRepository.existsById(id);
-        System.out.println("Category deleted. Still exists: " + exists);
-        System.out.println("=== END DELETE DEBUG ===");
     }
 
     // Helper to convert Entity -> DTO

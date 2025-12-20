@@ -166,3 +166,6 @@ All configuration files are in application.properties per service.
 
 You now have a fully containerized backend for UPIQ. 🎊
 Follow this README step-by-step, and you’ll be up and running in minutes.
+
+---
+**Created by Harshdeep Singh | 2025**

@@ -7,6 +7,7 @@ import com.UPIQ.TransactionService.model.Transaction;
 import com.UPIQ.TransactionService.repository.TransactionRepository;
 import com.UPIQ.TransactionService.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @org.springframework.transaction.annotation.Transactional
 public class TransactionServiceImpl implements TransactionService {
 
@@ -32,13 +34,24 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
 
         if (request.getDate() != null && !request.getDate().isEmpty()) {
-            // Remove 'Z' if present to parse as Local
-            String dateStr = request.getDate().replace("Z", "");
-            transaction.setDate(LocalDateTime.parse(dateStr));
+            try {
+                // Support multiple formats: ISO with 'Z', without 'T', etc.
+                String dateStr = request.getDate().replace("Z", "");
+                if (!dateStr.contains("T") && dateStr.contains(" ")) {
+                    dateStr = dateStr.replace(" ", "T");
+                }
+                transaction.setDate(LocalDateTime.parse(dateStr));
+            } catch (Exception e) {
+                log.warn("Failed to parse date: {}, using current time", request.getDate());
+                transaction.setDate(LocalDateTime.now());
+            }
         } else {
             transaction.setDate(LocalDateTime.now());
         }
+        log.info("Adding new {} transaction for userId: {}, Amount: {}, Category: {}",
+                request.getType(), userId, request.getAmount(), request.getCategory());
         transaction = repository.save(transaction);
+        log.debug("Successfully created transaction with id: {}", transaction.getId());
         return mapToResponse(transaction);
     }
 
@@ -59,17 +72,28 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public void deleteTransaction(Long id) {
-        if (!repository.existsById(id)) {
-            throw new TransactionNotFoundException("Transaction not found with id: " + id);
+    public void deleteTransaction(Long id, Long userId) {
+        Transaction transaction = repository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
+
+        // Security check: Ensure user owns the transaction
+        if (!transaction.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized: You do not own this transaction");
         }
-        repository.deleteById(id);
+        log.info("Deleting transaction with id: {} for userId: {}", id, userId);
+        repository.delete(transaction);
+        log.debug("Transaction {} deleted successfully", id);
     }
 
     @Override
-    public TransactionResponse getById(Long id) {
+    public TransactionResponse getById(Long id, Long userId) {
         Transaction transaction = repository.findById(id)
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
+
+        // Security check: Ensure user owns the transaction
+        if (!transaction.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized: You do not own this transaction");
+        }
         return mapToResponse(transaction);
     }
 
@@ -95,7 +119,9 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setDate(LocalDateTime.parse(dateStr));
         }
 
+        log.info("Updating transaction with id: {} for userId: {}", id, userId);
         Transaction updated = repository.save(transaction);
+        log.debug("Transaction {} updated successfully", id);
         return mapToResponse(updated);
     }
 

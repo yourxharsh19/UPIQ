@@ -1,5 +1,6 @@
 import { Edit2, Trash2 } from "lucide-react";
 import { getCategoryDisplayProps } from "../../utils/categoryUtils";
+import clsx from "clsx";
 
 const CategoryCard = ({ category, transactionCount = 0, onClick, onEdit, onDelete }) => {
     const isIncome = category.type?.toLowerCase() === 'income';
@@ -24,41 +25,77 @@ const CategoryCard = ({ category, transactionCount = 0, onClick, onEdit, onDelet
     return (
         <div
             onClick={handleCardClick}
-            className={`p-4 rounded-lg border-2 transition-all hover:shadow-lg hover:-translate-y-1 ${displayProps.colorClasses.border} ${displayProps.colorClasses.bg} hover:border-opacity-80 ${transactionCount > 0 ? 'cursor-pointer' : ''}`}
+            className={clsx(
+                "relative bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-base)] shadow-premium hover:shadow-premium-hover transition-all duration-300 group overflow-hidden",
+                transactionCount > 0 ? 'cursor-pointer' : ''
+            )}
         >
+            {/* Dynamic Accent Bar */}
+            <div
+                className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full"
+                style={{ backgroundColor: displayProps.colorValue }}
+            />
+
             <div className="flex justify-between items-start">
                 <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-2xl">{displayProps.icon}</span>
-                        <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
+                    <div className="flex items-center gap-3 mb-4">
+                        <div
+                            className="p-2.5 rounded-xl border border-[var(--border-base)] text-2xl group-hover:scale-110 transition-transform"
+                            style={{
+                                backgroundColor: `${displayProps.colorValue}15`,
+                                borderColor: `${displayProps.colorValue}30`
+                            }}
+                        >
+                            {displayProps.icon}
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-[var(--text-main)] tracking-tight leading-tight">{category.name}</h3>
+                            <span
+                                className="text-[10px] font-bold uppercase tracking-wider"
+                                style={{ color: displayProps.colorValue }}
+                            >
+                                {category.type?.toUpperCase()}
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${displayProps.colorClasses.bg} ${displayProps.colorClasses.text}`}>
-                            {category.type?.toUpperCase()}
-                        </span>
-
+                    <div className="flex items-center gap-2 mb-6">
                         {transactionCount > 0 ? (
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                                📊 {transactionCount} transaction{transactionCount !== 1 ? 's' : ''}
+                            <span
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                                style={{
+                                    backgroundColor: `${displayProps.colorValue}10`,
+                                    color: displayProps.colorValue,
+                                    borderColor: `${displayProps.colorValue}20`
+                                }}
+                            >
+                                {transactionCount} Transactions
                             </span>
                         ) : (
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">
-                                No transactions
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-surface)] text-[var(--text-muted)] border border-[var(--border-base)]">
+                                No activity
                             </span>
                         )}
                     </div>
 
                     {category.description && (
-                        <p className="mt-2 text-sm text-gray-600">{category.description}</p>
+                        <p className="text-sm text-[var(--text-muted)] line-clamp-2 leading-relaxed">{category.description}</p>
                     )}
                 </div>
 
-                <div className="flex gap-1 ml-2">
-                    <button onClick={handleEdit} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition" title="Edit category">
+                <div className="flex flex-col gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={handleEdit}
+                        className="p-2 text-[var(--text-muted)] hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-xl transition-all"
+                        title="Edit category"
+                    >
                         <Edit2 size={16} />
                     </button>
-                    <button onClick={handleDelete} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition" title="Delete category">
+                    <button
+                        onClick={handleDelete}
+                        className="p-2 text-[var(--text-muted)] hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
+                        title="Delete category"
+                    >
                         <Trash2 size={16} />
                     </button>
                 </div>

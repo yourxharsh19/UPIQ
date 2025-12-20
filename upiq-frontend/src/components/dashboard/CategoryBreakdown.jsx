@@ -35,9 +35,9 @@ const CategoryBreakdown = ({ transactions }) => {
       const data = payload[0];
       const percentage = ((data.value / total) * 100).toFixed(1);
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-900">{data.name}</p>
-          <p className="text-sm text-gray-600">
+        <div className="bg-[var(--bg-card)] p-3 rounded-xl border border-[var(--border-base)] shadow-premium-hover backdrop-blur-md bg-opacity-90">
+          <p className="font-bold text-[var(--text-main)] text-sm">{data.name}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
             ₹{data.value.toLocaleString('en-IN')} ({percentage}%)
           </p>
         </div>
@@ -47,37 +47,35 @@ const CategoryBreakdown = ({ transactions }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-1">Category Breakdown</h3>
-        <p className="text-sm text-gray-500">Expense distribution by category</p>
+    <div className="bg-[var(--bg-card)] p-8 rounded-2xl border border-[var(--border-base)] shadow-premium hover:shadow-premium-hover transition-all duration-300">
+      <div className="mb-8">
+        <h3 className="text-lg font-bold text-[var(--text-main)] mb-1 tracking-tight">Category Breakdown</h3>
+        <p className="text-sm text-[var(--text-muted)]">Expense distribution by category</p>
       </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="h-80">
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#8884d8"
+                innerRadius={60}
+                outerRadius={90}
+                paddingAngle={5}
                 dataKey="value"
               >
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
         </div>
-        
-        <div className="space-y-3">
-          <h4 className="font-semibold text-gray-900 mb-4">Top Categories</h4>
+
+        <div className="space-y-5">
           {breakdown.slice(0, 5).map((item, index) => {
             const percentage = ((item.amount / total) * 100).toFixed(1);
             const colorInfo = getCategoryColor(item.name);
@@ -86,21 +84,21 @@ const CategoryBreakdown = ({ transactions }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-4 h-4 rounded-full"
+                      className="w-2.5 h-2.5 rounded-full"
                       style={{ backgroundColor: colorInfo.value }}
                     />
-                    <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                    <span className="text-sm font-medium text-[var(--text-main)]">{item.name}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-bold text-[var(--text-main)]">
                       ₹{item.amount.toLocaleString('en-IN')}
                     </span>
-                    <span className="text-xs text-gray-500 ml-2">{percentage}%</span>
+                    <span className="text-[10px] font-bold text-[var(--text-muted)] ml-2 uppercase tracking-wider">{percentage}%</span>
                   </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-[var(--bg-surface)] rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="h-2 rounded-full transition-all duration-500"
+                    className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
                       width: `${percentage}%`,
                       backgroundColor: colorInfo.value

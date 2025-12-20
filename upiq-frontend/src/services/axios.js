@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://localhost:8080/api", // API Gateway URL
+    baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api",
     headers: {
         "Content-Type": "application/json",
     },
@@ -31,10 +31,17 @@ api.interceptors.response.use(
         });
         if (error.response && error.response.status === 401) {
             console.error("Axios Interceptor: 401 UNAUTHORIZED detected! Triggering logout/redirect.");
-            // Auto logout if 401 occurs
             localStorage.removeItem("token");
-            window.location.href = "/login";
+            // Only redirect if not already on login/register
+            if (!window.location.pathname.includes("/login") && !window.location.pathname.includes("/register")) {
+                window.location.href = "/login";
+            }
         }
+
+        // Extract meaningful error message
+        const errorMessage = error.response?.data?.message || error.message || "An unexpected error occurred";
+        error.userFriendlyMessage = errorMessage;
+
         return Promise.reject(error);
     }
 );

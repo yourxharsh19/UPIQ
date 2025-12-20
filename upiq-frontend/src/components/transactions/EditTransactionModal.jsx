@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import Button from "../ui/Button";
 import CategoryService from "../../services/category.service";
-import { Plus } from "lucide-react";
+import { Plus, X, IndianRupee } from "lucide-react";
+import clsx from "clsx";
 
 const EditTransactionModal = ({ isOpen, onClose, transaction, onSave }) => {
     const [formData, setFormData] = useState({
@@ -122,96 +123,117 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, onSave }) => {
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-xl font-semibold text-gray-900">Edit Transaction</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-[var(--bg-card)] rounded-3xl shadow-premium w-full max-w-md overflow-hidden animate-zoom-in">
+                <div className="px-6 py-5 border-b border-[var(--border-base)] flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-[var(--text-main)] tracking-tight">Edit Transaction</h2>
+                    <button onClick={onClose} className="p-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">
+                        <X size={20} />
+                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <input
-                            type="text"
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                            required
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={formData.amount}
-                                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                            <select
-                                value={formData.type}
-                                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                            >
-                                <option value="INCOME">Income</option>
-                                <option value="EXPENSE">Expense</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Category {loadingCategories && <span className="text-xs text-gray-500">(loading...)</span>}
-                        </label>
-                        <div className="flex gap-2">
+                            <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">Description</label>
                             <input
                                 type="text"
-                                list="category-suggestions"
-                                value={formData.category}
-                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                placeholder="Select or type a category"
+                                shadow-sm
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                className="w-full px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-base)] rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm transition-all text-[var(--text-main)]"
+                                placeholder="Description"
                                 required
                             />
-                            <button
-                                type="button"
-                                onClick={handleQuickAddCategory}
-                                disabled={creatingCategory || !formData.category.trim()}
-                                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center gap-1"
-                                title="Create this category"
-                            >
-                                <Plus size={16} />
-                                {creatingCategory ? "..." : "Add"}
-                            </button>
                         </div>
-                        <datalist id="category-suggestions">
-                            {allCategories.map((cat) => (
-                                <option key={cat} value={cat} />
-                            ))}
-                        </datalist>
-                        <p className="mt-1 text-xs text-gray-500">
-                            💡 Type a new category name and click "+ Add" to create it
-                        </p>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">Amount</label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-bold">₹</span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.amount}
+                                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                        className="w-full pl-8 pr-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-base)] rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm transition-all text-[var(--text-main)] font-bold"
+                                        placeholder="0.00"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-3">Type</label>
+                                <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-base)] w-full">
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, type: "EXPENSE" })}
+                                        className={clsx(
+                                            "flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
+                                            formData.type === "EXPENSE" ? "bg-[var(--bg-card)] text-rose-600 shadow-sm border border-[var(--border-base)]" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                                        )}
+                                    >
+                                        Expense
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, type: "INCOME" })}
+                                        className={clsx(
+                                            "flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
+                                            formData.type === "INCOME" ? "bg-[var(--bg-card)] text-emerald-600 shadow-sm border border-[var(--border-base)]" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                                        )}
+                                    >
+                                        Income
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+                                Category {loadingCategories && <span className="text-[10px] font-medium lowercase text-primary-500">(loading...)</span>}
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    list="category-suggestions"
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    className="flex-1 px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-base)] rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm transition-all text-[var(--text-main)]"
+                                    placeholder="Select or type a category"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleQuickAddCategory}
+                                    disabled={creatingCategory || !formData.category.trim()}
+                                    className="px-4 py-2 bg-emerald-600/10 text-emerald-600 border border-emerald-600/20 rounded-xl hover:bg-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+                                >
+                                    <Plus size={16} />
+                                    {creatingCategory ? "..." : "Add"}
+                                </button>
+                            </div>
+                            <datalist id="category-suggestions">
+                                {allCategories.map((cat) => (
+                                    <option key={cat} value={cat} />
+                                ))}
+                            </datalist>
+                        </div>
                     </div>
 
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <button
-                            type="button"
+                    <div className="flex gap-3 pt-2">
+                        <Button
+                            variant="secondary"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                            className="flex-1"
                         >
                             Cancel
-                        </button>
+                        </Button>
                         <Button
                             type="submit"
-                            isLoading={saving}
-                            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                            loading={saving}
+                            className="flex-1"
                         >
                             Save Changes
                         </Button>

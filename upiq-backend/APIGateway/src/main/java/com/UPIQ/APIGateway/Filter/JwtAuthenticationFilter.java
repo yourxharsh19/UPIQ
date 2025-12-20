@@ -109,10 +109,10 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     }
 
     private boolean isPublicEndpoint(String path) {
-        return path.startsWith("/api/v1/auth/login")
-                || path.startsWith("/api/v1/auth/register")
+        return path.startsWith("/api/auth/login")
+                || path.startsWith("/api/auth/register")
                 || path.startsWith("/actuator")
-                || path.startsWith("/api/v1/public");
+                || path.startsWith("/api/public");
     }
 
     private Mono<Void> processWithUserId(ServerWebExchange exchange, String email,

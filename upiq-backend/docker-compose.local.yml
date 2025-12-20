@@ -32,6 +32,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: OvZseP71KwAAWUuC6jdiKL3WiefJmXeVTqUQL5jlG7EyjiXmhUqIK38D5/LGyIVZpCWaSZQ9W6hnvCJtQzABog==
     depends_on:
       - eureka-server
       - user-auth-db

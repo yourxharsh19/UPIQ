@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { AlertCircle, TrendingUp, Target, PieChart } from "lucide-react";
 import {
   getTopSpendingCategory,
@@ -6,12 +7,13 @@ import {
   getOverspendingCategories,
   getIncomeExpenseRatio
 } from "../../utils/transactionUtils";
+import clsx from "clsx";
 
 const InsightCards = ({ transactions }) => {
-  const topCategory = getTopSpendingCategory(transactions);
-  const concentration = calculateSpendingConcentration(transactions);
-  const overspendingCategories = getOverspendingCategories(transactions);
-  const incomeExpenseRatio = getIncomeExpenseRatio(transactions);
+  const topCategory = useMemo(() => getTopSpendingCategory(transactions), [transactions]);
+  const concentration = useMemo(() => calculateSpendingConcentration(transactions), [transactions]);
+  const overspendingCategories = useMemo(() => getOverspendingCategories(transactions), [transactions]);
+  const incomeExpenseRatio = useMemo(() => getIncomeExpenseRatio(transactions), [transactions]);
 
   const insights = [];
 
@@ -27,8 +29,8 @@ const InsightCards = ({ transactions }) => {
       description: categoryMom.direction === 'up'
         ? `Spending ↑ ${categoryMom.change.toFixed(1)}% vs last month`
         : categoryMom.direction === 'down'
-        ? `Spending ↓ ${categoryMom.change.toFixed(1)}% vs last month`
-        : "Spending unchanged vs last month",
+          ? `Spending ↓ ${categoryMom.change.toFixed(1)}% vs last month`
+          : "Spending unchanged vs last month",
       value: `₹${topCategory.amount.toLocaleString('en-IN')}`,
       severity: "info"
     });
@@ -95,34 +97,42 @@ const InsightCards = ({ transactions }) => {
   }
 
   return (
-    <div className="mb-8">
-      <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-        <Target size={20} className="text-primary-600" />
+    <div className="mb-12">
+      <h2 className="text-lg font-bold text-[var(--text-main)] mb-6 flex items-center gap-2 tracking-tight">
+        <Target size={18} className="text-primary-600" />
         Financial Insights
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {insights.map((insight, index) => {
           const Icon = insight.icon;
+          const severityColors = {
+            error: "border-l-rose-500 text-rose-600 dark:text-rose-400",
+            warning: "border-l-amber-500 text-amber-600 dark:text-amber-400",
+            success: "border-l-emerald-500 text-emerald-600 dark:text-emerald-400",
+            info: "border-l-indigo-500 text-indigo-600 dark:text-indigo-400",
+          };
+
           return (
             <div
               key={index}
-              className={`${insight.bgColor} rounded-xl p-5 border-2 ${
-                insight.severity === 'error' ? 'border-red-200' :
-                insight.severity === 'warning' ? 'border-orange-200' :
-                insight.severity === 'success' ? 'border-green-200' :
-                'border-purple-200'
-              } hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}
+              className={clsx(
+                "bg-[var(--bg-card)] rounded-2xl p-6 border border-[var(--border-base)] border-l-4 shadow-premium hover:shadow-premium-hover transition-all duration-300",
+                severityColors[insight.severity] || "border-l-primary-500"
+              )}
             >
-              <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-lg bg-white ${insight.iconColor}`}>
-                  <Icon size={24} />
+              <div className="flex items-start gap-5">
+                <div className={clsx(
+                  "p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-base)]",
+                  insight.iconColor
+                )}>
+                  <Icon size={20} />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900 mb-1">{insight.title}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{insight.description}</p>
+                  <h3 className="font-bold text-[var(--text-main)] mb-1 tracking-tight">{insight.title}</h3>
+                  <p className="text-sm text-[var(--text-muted)] leading-relaxed">{insight.description}</p>
                   {insight.value && (
-                    <div className="mt-2">
-                      <span className="inline-block px-3 py-1 bg-white rounded-full text-sm font-semibold text-gray-900">
+                    <div className="mt-3">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[var(--bg-surface)] border border-[var(--border-base)] text-[var(--text-main)]">
                         {insight.value}
                       </span>
                     </div>

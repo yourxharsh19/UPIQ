@@ -2,7 +2,10 @@ import clsx from "clsx";
 
 const Card = ({ children, className }) => {
     return (
-        <div className={clsx("bg-white p-6 rounded-xl shadow-sm border border-gray-100", className)}>
+        <div className={clsx(
+            "bg-[var(--bg-card)] border border-[var(--border-base)] rounded-2xl shadow-premium overflow-hidden",
+            className
+        )}>
             {children}
         </div>
     );

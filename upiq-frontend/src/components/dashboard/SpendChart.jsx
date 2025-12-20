@@ -25,17 +25,32 @@ const SpendChart = ({ transactions }) => {
     }
 
     return (
-        <div className="bg-white p-6 rounded-xl border border-gray-100 h-80">
-            <h3 className="text-gray-500 text-sm font-medium mb-4">Category Spend</h3>
-            <ResponsiveContainer width="100%" height="100%">
+        <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-base)] h-80 shadow-premium">
+            <h3 className="text-[var(--text-muted)] text-sm font-medium mb-6 tracking-tight">Category Spend</h3>
+            <ResponsiveContainer width="100%" height="85%">
                 <BarChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-base)" />
+                    <XAxis
+                        dataKey="name"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
                     />
-                    <Bar dataKey="amount" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                    <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+                    />
+                    <Tooltip
+                        cursor={{ fill: 'var(--bg-surface)', opacity: 0.4 }}
+                        contentStyle={{
+                            backgroundColor: 'var(--bg-card)',
+                            borderRadius: '12px',
+                            border: '1px solid var(--border-base)',
+                            boxShadow: 'var(--shadow-premium-hover)'
+                        }}
+                    />
+                    <Bar dataKey="amount" fill="var(--primary-accent)" radius={[6, 6, 0, 0]} barSize={24} />
                 </BarChart>
             </ResponsiveContainer>
         </div>

@@ -1,44 +1,57 @@
+# General
 HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+*.log
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
+# IDEs
+.idea/
 *.iws
 *.iml
 *.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+.springBeans
+.sts4-cache
+.apt_generated
+bin/
+obj/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
+# Java / Maven
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+**/build/
+!**/src/main/**/target/
+!**/src/test/**/target/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+# Node / JS
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.cache/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
 
-### Node.js ###
-node_modules/
-dist/
-npm-debug.log
+# Environment / Secret
 .env
-.env.local
+.env.*
+!.env.example
+secrets.yml
 
-### OS ###
-.DS_Store
-Thumbs.db
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Project Specific
+upiq-frontend/dist/
+upiq-backend/**/target/

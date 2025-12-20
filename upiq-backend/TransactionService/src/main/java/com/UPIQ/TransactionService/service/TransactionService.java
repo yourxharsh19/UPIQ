@@ -12,9 +12,9 @@ public interface TransactionService {
 
     List<TransactionResponse> getUserTransactionsByCategory(Long userId, String category);
 
-    void deleteTransaction(Long id);
+    void deleteTransaction(Long id, Long userId);
 
-    TransactionResponse getById(Long id);
+    TransactionResponse getById(Long id, Long userId);
 
     TransactionResponse updateTransaction(Long id, com.UPIQ.TransactionService.dto.CreateTransactionRequest request,
             Long userId);

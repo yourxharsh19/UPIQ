@@ -78,8 +78,8 @@ const Dashboard = () => {
         return (
             <div className="space-y-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Financial Dashboard</h1>
-                    <p className="text-gray-600">Comprehensive overview of your income, expenses, and financial insights</p>
+                    <h1 className="text-3xl font-bold text-[var(--text-main)] mb-2">Financial Dashboard</h1>
+                    <p className="text-[var(--text-muted)]">Comprehensive overview of your income, expenses, and financial insights</p>
                 </div>
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
                     <EmptyState type="dashboard" />
@@ -93,8 +93,8 @@ const Dashboard = () => {
             {/* Header */}
             <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Financial Dashboard</h1>
-                    <p className="text-gray-600">Comprehensive overview of your income, expenses, and financial insights</p>
+                    <h1 className="text-3xl font-bold text-[var(--text-main)] mb-2">Financial Dashboard</h1>
+                    <p className="text-[var(--text-muted)]">Comprehensive overview of your income, expenses, and financial insights</p>
                 </div>
                 <DateRangeFilter />
             </div>

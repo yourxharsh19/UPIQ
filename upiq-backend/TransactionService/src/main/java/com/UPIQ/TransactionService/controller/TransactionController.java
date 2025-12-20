@@ -62,8 +62,9 @@ public class TransactionController {
 
         // ------------------- GET TRANSACTION BY ID -------------------
         @GetMapping("/{id}")
-        public ResponseEntity<ApiResponse<TransactionResponse>> getById(@PathVariable Long id) {
-                TransactionResponse transaction = service.getById(id);
+        public ResponseEntity<ApiResponse<TransactionResponse>> getById(@PathVariable Long id,
+                        @RequestHeader("X-User-Id") Long userId) {
+                TransactionResponse transaction = service.getById(id, userId);
                 ApiResponse<TransactionResponse> response = ApiResponse.<TransactionResponse>builder()
                                 .success(true)
                                 .data(transaction)
@@ -75,8 +76,8 @@ public class TransactionController {
         // ------------------- DELETE TRANSACTION -------------------
         // ------------------- DELETE TRANSACTION -------------------
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
-                service.deleteTransaction(id);
+        public ResponseEntity<Void> deleteTransaction(@PathVariable Long id, @RequestHeader("X-User-Id") Long userId) {
+                service.deleteTransaction(id, userId);
                 return ResponseEntity.noContent().build();
         }
 
