@@ -10,6 +10,7 @@ import RecentActivity from "../components/dashboard/RecentActivity";
 import BudgetProgress from "../components/dashboard/BudgetProgress";
 import DateRangeFilter from "../components/dashboard/DateRangeFilter";
 import EmptyState from "../components/ui/EmptyState";
+import Card from "../components/ui/Card";
 import SkeletonLoader from "../components/ui/SkeletonLoader";
 
 const Dashboard = () => {
@@ -81,9 +82,9 @@ const Dashboard = () => {
                     <h1 className="text-3xl font-bold text-[var(--text-main)] mb-2">Financial Dashboard</h1>
                     <p className="text-[var(--text-muted)]">Comprehensive overview of your income, expenses, and financial insights</p>
                 </div>
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+                <Card>
                     <EmptyState type="dashboard" />
-                </div>
+                </Card>
             </div>
         );
     }
