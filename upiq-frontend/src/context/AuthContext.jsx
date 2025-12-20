@@ -9,20 +9,13 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const checkAuth = async () => {
+            console.log("AuthContext: Performing checkAuth...");
             const token = localStorage.getItem("token");
             if (token) {
-                try {
-                    // Optional: Verify token with backend if endpoint exists,
-                    // or decode token if using jwt-decode.
-                    // For now, we assume if token exists, user is logged in.
-                    // We can decode the token here to get username if needed.
-                    // const decoded = jwtDecode(token);
-                    // setUser({ username: decoded.sub });
-                    setUser({ token });
-                } catch (error) {
-                    console.error("Auth check failed", error);
-                    localStorage.removeItem("token");
-                }
+                console.log("AuthContext: Token found in localStorage");
+                setUser({ token });
+            } else {
+                console.log("AuthContext: No token found");
             }
             setLoading(false);
         };
@@ -30,17 +23,25 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
     }, []);
 
-    const login = async (username, password) => {
+    const login = async (email, password) => {
+        console.log("AuthContext: Attempting login for email:", email);
         try {
-            // Adjust endpoint based on backend definition in UserAuthService
-            const response = await api.post("/auth/login", { username, password });
-            const { token } = response.data;
+            const response = await api.post("/auth/login", { email, password });
+            console.log("AuthContext: API response received:", response.data);
 
-            localStorage.setItem("token", token);
-            setUser({ token });
-            return true;
+            if (response.data && response.data.data && response.data.data.token) {
+                const token = response.data.data.token;
+                console.log("AuthContext: Login SUCCESS, token found");
+                localStorage.setItem("token", token);
+                setUser({ token });
+                console.log("AuthContext: Global USER state updated");
+                return true;
+            } else {
+                console.warn("AuthContext: Token MISSING in response", response.data);
+                throw new Error("Invalid response structure from login API");
+            }
         } catch (error) {
-            console.error("Login failed", error);
+            console.error("AuthContext: Login request FAILED", error);
             throw error;
         }
     };

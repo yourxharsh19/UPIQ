@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { registerUser } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
+import api from "../services/axios";
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -21,7 +21,7 @@ const Register = () => {
     setError("");
 
     try {
-      await registerUser(form);
+      await api.post("/auth/register", form);
       alert("Registration Successful! Please Login.");
       navigate("/login");
     } catch (err) {

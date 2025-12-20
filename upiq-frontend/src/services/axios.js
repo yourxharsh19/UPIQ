@@ -25,7 +25,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        console.warn("Axios Interceptor: Response ERROR detected", {
+            status: error.response?.status,
+            url: error.config?.url
+        });
         if (error.response && error.response.status === 401) {
+            console.error("Axios Interceptor: 401 UNAUTHORIZED detected! Triggering logout/redirect.");
             // Auto logout if 401 occurs
             localStorage.removeItem("token");
             window.location.href = "/login";

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { loginUser } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
@@ -8,11 +7,11 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUserFromToken } = useAuth();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError(""); // Clear error on change
+    setError(""); 
   };
 
   const handleSubmit = async (e) => {
@@ -21,19 +20,15 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await loginUser(form);
-      const token = res.data.data.token;
-
-      if (token) {
-        // Update AuthContext state before navigation
-        setUserFromToken(token);
-        // Navigate to dashboard after updating auth state
+      console.log("Login: Calling auth.login...");
+      const success = await login(form.email, form.password);
+      console.log("Login: auth.login result:", success);
+      if (success) {
+        console.log("Login: Success! Attempting navigation to /dashboard");
         navigate("/dashboard");
-      } else {
-        setError("Login failed: No token received");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Login: Caught error", err);
       setError(err.response?.data?.message || "Invalid Credentials or Server Error");
     } finally {
       setLoading(false);
