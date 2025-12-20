@@ -20,14 +20,16 @@ public class Category {
     @Column(nullable = false)
     private String name;
 
-    @NotBlank(message = "Category type is required")  // income or expense
+    @NotBlank(message = "Category type is required") // income or expense
     @Column(nullable = false)
     private String type;
 
     private String description;
 
+    private String color;
+    private String icon;
+
     // Later used for analytics (pie charts etc.)
     @Column(nullable = false)
     private Long userId;
 }
-

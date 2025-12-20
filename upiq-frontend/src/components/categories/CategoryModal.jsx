@@ -67,15 +67,15 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="p-6 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="p-4 border-b border-gray-100">
                     <h2 className="text-xl font-semibold text-gray-900">
                         {category ? "Edit Category" : "Add New Category"}
                     </h2>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-4 space-y-3">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Category Name *
@@ -141,11 +141,10 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
                                     key={color.value}
                                     type="button"
                                     onClick={() => setFormData({ ...formData, color: color.value })}
-                                    className={`w-full h-10 rounded-lg border-2 transition-all ${
-                                        formData.color === color.value
-                                            ? 'border-gray-900 ring-2 ring-offset-2 ring-primary-500'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                    }`}
+                                    className={`w-full h-10 rounded-lg border-2 transition-all ${formData.color === color.value
+                                        ? 'border-gray-900 ring-2 ring-offset-2 ring-primary-500 z-10'
+                                        : 'border-gray-200 hover:border-gray-300'
+                                        }`}
                                     style={{ backgroundColor: color.value }}
                                     title={color.name}
                                 />
@@ -157,17 +156,16 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Category Icon
                         </label>
-                        <div className="grid grid-cols-10 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded-lg">
+                        <div className="grid grid-cols-8 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded-lg">
                             {CATEGORY_ICONS.map((icon) => (
                                 <button
                                     key={icon}
                                     type="button"
                                     onClick={() => setFormData({ ...formData, icon })}
-                                    className={`w-10 h-10 rounded-lg border-2 text-xl flex items-center justify-center transition-all ${
-                                        formData.icon === icon
-                                            ? 'border-primary-600 bg-primary-50 ring-2 ring-primary-500'
-                                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                    }`}
+                                    className={`w-10 h-10 rounded-lg border-2 text-xl flex items-center justify-center transition-all ${formData.icon === icon
+                                        ? 'border-primary-600 bg-primary-50 ring-2 ring-primary-500'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                        }`}
                                 >
                                     {icon}
                                 </button>

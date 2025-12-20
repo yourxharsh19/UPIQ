@@ -46,21 +46,22 @@ public class AuthService {
                 .email(request.getEmail())
                 .username(request.getUserName() != null ? request.getUserName() : request.getEmail().split("@")[0])
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(userRole)  // Must be set explicitly to override @Builder.Default
+                .role(userRole) // Must be set explicitly to override @Builder.Default
                 .active(true)
                 .build();
 
-        // Ensure role is set correctly (explicitly set again in case builder default interferes)
+        // Ensure role is set correctly (explicitly set again in case builder default
+        // interferes)
         user.setRole(userRole);
-        
+
         User savedUser = userService.saveUser(user);
-        
+
         // Verify the role was saved correctly
         if (!savedUser.getRole().equals(userRole)) {
             savedUser.setRole(userRole);
             userService.saveUser(savedUser);
         }
-        
+
         return "User registered successfully!";
     }
 
@@ -72,7 +73,7 @@ public class AuthService {
         }
 
         User user = userOpt.get();
-        
+
         if (!user.isActive()) {
             return "Account is disabled. Please contact support.";
         }
@@ -81,9 +82,8 @@ public class AuthService {
             return "Invalid credentials!";
         }
 
-        // Generate JWT token
-        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+        // Generate JWT token with userId
+        String token = jwtService.generateToken(user.getEmail(), user.getRole().name(), user.getId());
         return token;
     }
 }
-

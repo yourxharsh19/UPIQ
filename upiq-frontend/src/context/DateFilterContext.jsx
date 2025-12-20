@@ -57,6 +57,11 @@ export const DateFilterProvider = ({ children }) => {
     setEndDate(new Date(now.getFullYear(), 11, 31, 23, 59, 59));
   };
 
+  const resetToAllTime = () => {
+    setStartDate(new Date(2000, 0, 1));
+    setEndDate(new Date(2100, 11, 31, 23, 59, 59));
+  };
+
   const value = useMemo(() => ({
     startDate,
     endDate,
@@ -65,7 +70,8 @@ export const DateFilterProvider = ({ children }) => {
     resetToLastMonth,
     resetToLast30Days,
     resetToLast90Days,
-    resetToThisYear
+    resetToThisYear,
+    resetToAllTime
   }), [startDate, endDate]);
 
   return (

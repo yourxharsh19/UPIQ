@@ -19,5 +19,6 @@ public class CreateCategoryRequest {
     private String type;
 
     private String description;
+    private String color;
+    private String icon;
 }
-

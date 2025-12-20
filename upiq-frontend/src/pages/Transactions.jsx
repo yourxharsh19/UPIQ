@@ -5,12 +5,12 @@ import { filterByDateRange } from "../utils/transactionUtils";
 import TransactionTable from "../components/transactions/TransactionTable";
 import EditTransactionModal from "../components/transactions/EditTransactionModal";
 import DateRangeFilter from "../components/dashboard/DateRangeFilter";
-import { Search } from "lucide-react";
+import { Search, AlertCircle } from "lucide-react";
 
 const Transactions = () => {
     const [allTransactions, setAllTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { startDate, endDate } = useDateFilter();
+    const { startDate, endDate, resetToAllTime } = useDateFilter();
     const [filters, setFilters] = useState({
         search: "",
         type: "ALL",
@@ -142,6 +142,16 @@ const Transactions = () => {
                     </select>
                 </div>
             </div>
+
+            {allTransactions.length > 0 && filteredTransactions.length === 0 && !loading && (
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-3 text-blue-700">
+                    <AlertCircle size={20} />
+                    <p className="text-sm font-medium">
+                        You have {allTransactions.length} total transactions, but none match the current date filter or search.
+                        Try selecting <span className="font-bold underline cursor-pointer" onClick={() => resetToAllTime()}>All Time</span> in the date filter.
+                    </p>
+                </div>
+            )}
 
             {loading ? (
                 <div className="text-center py-10">Loading...</div>

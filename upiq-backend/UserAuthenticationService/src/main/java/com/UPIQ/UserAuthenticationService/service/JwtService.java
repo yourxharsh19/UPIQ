@@ -27,9 +27,10 @@ public class JwtService {
     }
 
     // 🧾 Generate JWT token
-    public String generateToken(String email, String role) {
+    public String generateToken(String email, String role, Long userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        claims.put("userId", userId.toString()); // Add userId to claims
 
         return Jwts.builder()
                 .claims(claims)
@@ -81,4 +82,3 @@ public class JwtService {
         }
     }
 }
-

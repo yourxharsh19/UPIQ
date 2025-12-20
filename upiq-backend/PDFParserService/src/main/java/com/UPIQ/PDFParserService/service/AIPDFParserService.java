@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,7 +28,12 @@ public class AIPDFParserService {
     private static final Pattern CURRENCY_PATTERN = Pattern.compile("(?:₹|rs\\.?|inr)\\s*([\\d,]+(?:\\.\\d{1,2})?)",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile(
-            "\\b(\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4})\\b|(\\d{1,2}\\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\s+\\d{2,4})",
+            // Matches: dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy, yyyy-mm-dd (with optional
+            // spaces)
+            "\\b(\\d{1,2}\\s*[/\\.-]\\s*\\d{1,2}\\s*[/\\.-]\\s*\\d{2,4})\\b|\\b(\\d{4}\\s*-\\s*\\d{1,2}\\s*-\\s*\\d{1,2})\\b|"
+                    +
+                    // Matches: dd Mon yyyy, dd Month yyyy (with optional commas)
+                    "(\\d{1,2}\\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\s*[,\\s]+\\s*\\d{2,4})",
             Pattern.CASE_INSENSITIVE);
 
     // Fixed: Restored "Paid to" triggers but restricted Bank Name matching to avoid
@@ -42,11 +48,22 @@ public class AIPDFParserService {
     private static final Set<String> IGNORE_PATTERNS = Set.of("opening balance", "closing balance", "date & time",
             "page", "statement");
 
+    // Helper to create robust case-insensitive English formatters
+    private static DateTimeFormatter createFormatter(String pattern) {
+        return new DateTimeFormatterBuilder()
+                .parseCaseInsensitive()
+                .appendPattern(pattern)
+                .toFormatter(Locale.ENGLISH);
+    }
+
     // Standard formatters
     private static final List<DateTimeFormatter> DATE_FORMATTERS = Arrays.asList(
-            DateTimeFormatter.ofPattern("dd/MM/yyyy"), DateTimeFormatter.ofPattern("dd-MM-yyyy"),
-            DateTimeFormatter.ofPattern("dd/MM/yy"), DateTimeFormatter.ofPattern("dd-MM-yy"),
-            DateTimeFormatter.ofPattern("dd MMM yyyy"), DateTimeFormatter.ofPattern("dd MMM yy"));
+            createFormatter("d/M/yyyy"), createFormatter("d-M-yyyy"), createFormatter("d.M.yyyy"),
+            createFormatter("d/M/yy"), createFormatter("d-M-yy"), createFormatter("d.M.yy"),
+            createFormatter("yyyy-MM-dd"),
+            createFormatter("d MMM yyyy"), createFormatter("d MMM yy"),
+            createFormatter("d MMM, yyyy"), createFormatter("d MMM, yy"),
+            createFormatter("dd MMM yyyy"), createFormatter("dd MMM, yyyy"));
 
     public List<TransactionRequest> parsePDF(MultipartFile file) {
         log.info("Starting PDF parsing for file: {}", file.getOriginalFilename());
@@ -77,8 +94,15 @@ public class AIPDFParserService {
 
         List<TransactionRequest> transactions = new ArrayList<>();
         List<String> currentBlock = new ArrayList<>();
+        LocalDateTime lastSeenDate = null;
 
         for (String line : lines) {
+            // "Sticky Date" logic: if a line is a date, remember it for subsequent blocks
+            LocalDateTime foundDate = extractDate(line);
+            if (foundDate != null) {
+                lastSeenDate = foundDate;
+            }
+
             String lower = line.toLowerCase();
             // Robust start detection logic (contains)
             boolean isStart = lower.contains("paid to") || lower.contains("received from")
@@ -88,19 +112,19 @@ public class AIPDFParserService {
                     || lower.contains("payment to");
 
             if (isStart && !currentBlock.isEmpty()) {
-                addTx(transactions, currentBlock);
+                addTx(transactions, currentBlock, lastSeenDate);
                 currentBlock.clear();
             }
             currentBlock.add(line);
         }
-        addTx(transactions, currentBlock);
+        addTx(transactions, currentBlock, lastSeenDate);
 
         log.info("Parsed {} transactions", transactions.size());
         return transactions;
     }
 
-    private void addTx(List<TransactionRequest> transactions, List<String> block) {
-        TransactionRequest tx = parseBlock(block);
+    private void addTx(List<TransactionRequest> transactions, List<String> block, LocalDateTime lastSeenDate) {
+        TransactionRequest tx = parseBlock(block, lastSeenDate);
         if (tx != null) {
             if (isValid(tx)) {
                 transactions.add(tx);
@@ -111,6 +135,10 @@ public class AIPDFParserService {
     }
 
     TransactionRequest parseBlock(List<String> block) {
+        return parseBlock(block, null);
+    }
+
+    TransactionRequest parseBlock(List<String> block, LocalDateTime lastSeenDate) {
         if (block == null || block.isEmpty())
             return null;
         String combined = String.join(" ", block);
@@ -131,7 +159,18 @@ public class AIPDFParserService {
         TransactionRequest tx = new TransactionRequest();
         tx.setType(finalType);
         tx.setAmount(amount);
-        tx.setDate(extractDate(combined));
+
+        // Try to find date in the block first; fallback to sticky date
+        LocalDateTime extractedDate = extractDate(combined);
+        if (extractedDate == null) {
+            extractedDate = lastSeenDate;
+        }
+        tx.setDate(extractedDate);
+
+        if (extractedDate == null) {
+            log.warn("Transaction parsed without date - Amount: {}, Type: {}", amount, finalType);
+        }
+
         tx.setDescription(extractDescription(block, type));
         tx.setPaymentMethod(lower.contains("cash") ? "CASH" : "UPI");
 
@@ -300,15 +339,57 @@ public class AIPDFParserService {
     private LocalDateTime extractDate(String text) {
         Matcher m = DATE_PATTERN.matcher(text);
         if (m.find()) {
-            String s = m.group(1) != null ? m.group(1) : m.group(2);
-            for (DateTimeFormatter fmt : DATE_FORMATTERS) {
-                try {
-                    return LocalDate.parse(s, fmt).atStartOfDay();
-                } catch (Exception e) {
+            // Group 1: Numeric (dd/mm/yyyy)
+            // Group 2: ISO (yyyy-mm-dd)
+            // Group 3: Text Month (dd Mon yyyy)
+
+            try {
+                if (m.group(3) != null) {
+                    // Text Month Logic
+                    String s = m.group(3);
+                    // Normalize: remove dots, commas, extra spaces -> "01 Oct 2025"
+                    s = s.replaceAll("[,\\.\\-]", " ").replaceAll("\\s+", " ").trim();
+                    log.debug("Normalized Text-Month Date: '{}'", s);
+
+                    List<DateTimeFormatter> textFormatters = Arrays.asList(
+                            createFormatter("d MMM yyyy"),
+                            createFormatter("d MMM yy"),
+                            createFormatter("dd MMM yyyy"));
+
+                    for (DateTimeFormatter fmt : textFormatters) {
+                        try {
+                            return LocalDate.parse(s, fmt).atStartOfDay();
+                        } catch (Exception ignored) {
+                        }
+                    }
+                } else if (m.group(2) != null) {
+                    // ISO Logic
+                    String s = m.group(2).replaceAll("\\s+", ""); // remove spaces "2023 - 10 - 26"
+                    return LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay();
+                } else if (m.group(1) != null) {
+                    // Numeric Logic
+                    String s = m.group(1);
+                    // Normalize: replace . - with / -> "26/10/2023"
+                    s = s.replaceAll("[\\.\\-]", "/").replaceAll("\\s+", "");
+                    log.debug("Normalized Numeric Date: '{}'", s);
+
+                    List<DateTimeFormatter> numericFormatters = Arrays.asList(
+                            createFormatter("d/M/yyyy"),
+                            createFormatter("d/M/yy"));
+
+                    for (DateTimeFormatter fmt : numericFormatters) {
+                        try {
+                            return LocalDate.parse(s, fmt).atStartOfDay();
+                        } catch (Exception ignored) {
+                        }
+                    }
                 }
+            } catch (Exception e) {
+                log.error("Error parsing date group: {}", e.getMessage());
             }
         }
-        return LocalDateTime.now();
+        log.warn("Failed to find date pattern in text: {}", text.substring(0, Math.min(100, text.length())));
+        return null;
     }
 
     private boolean isValid(TransactionRequest tx) {

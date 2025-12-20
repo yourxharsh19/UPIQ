@@ -114,8 +114,8 @@ const Dashboard = () => {
             {/* Budget Tracking */}
             <BudgetProgress transactions={transactions} />
 
-            {/* Recent Activity */}
-            <RecentActivity transactions={transactions} />
+            {/* Recent Activity - Show latest 5 transactions from ALL time */}
+            <RecentActivity transactions={allTransactions} />
         </div>
     );
 };

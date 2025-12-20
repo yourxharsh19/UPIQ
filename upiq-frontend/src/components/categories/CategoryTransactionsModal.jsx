@@ -21,9 +21,9 @@ const CategoryTransactionsModal = ({ isOpen, onClose, category, transactions }) 
     );
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[75vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center">
                     <div>
                         <h2 className="text-xl font-semibold text-gray-900">
                             {category.name} Transactions
@@ -41,7 +41,7 @@ const CategoryTransactionsModal = ({ isOpen, onClose, category, transactions }) 
                     </button>
                 </div>
 
-                <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                <div className="p-4 overflow-y-auto max-h-[calc(75vh-120px)]">
                     {categoryTransactions.length === 0 ? (
                         <div className="text-center py-10 text-gray-500">
                             <p className="mb-2">No transactions found for this category</p>
@@ -69,15 +69,15 @@ const CategoryTransactionsModal = ({ isOpen, onClose, category, transactions }) 
                                         </div>
                                         <div className="text-right">
                                             <p className={`text-lg font-semibold ${transaction.type?.toLowerCase() === 'income'
-                                                    ? 'text-green-600'
-                                                    : 'text-red-600'
+                                                ? 'text-green-600'
+                                                : 'text-red-600'
                                                 }`}>
                                                 {transaction.type?.toLowerCase() === 'income' ? '+' : '-'}
                                                 ₹{transaction.amount?.toFixed(2)}
                                             </p>
                                             <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full mt-1 ${transaction.type?.toLowerCase() === 'income'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-red-100 text-red-800'
                                                 }`}>
                                                 {transaction.type}
                                             </span>

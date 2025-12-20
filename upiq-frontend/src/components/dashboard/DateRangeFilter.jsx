@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useDateFilter } from "../../context/DateFilterContext";
 
 const DateRangeFilter = () => {
-  const { startDate, endDate, setDateRange, resetToCurrentMonth, resetToLastMonth, resetToLast30Days, resetToLast90Days, resetToThisYear } = useDateFilter();
+  const { startDate, endDate, setDateRange, resetToCurrentMonth, resetToLastMonth, resetToLast30Days, resetToLast90Days, resetToThisYear, resetToAllTime } = useDateFilter();
   const [isOpen, setIsOpen] = useState(false);
 
   const formatDate = (date) => {
@@ -77,6 +77,12 @@ const DateRangeFilter = () => {
                 className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
               >
                 This Year
+              </button>
+              <button
+                onClick={() => handlePresetClick(resetToAllTime)}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition border-t border-gray-100 mt-1 pt-2"
+              >
+                All Time
               </button>
               <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide border-t border-gray-100 mt-2">
                 Custom Range
